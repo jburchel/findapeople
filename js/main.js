@@ -205,19 +205,19 @@ document.addEventListener('DOMContentLoaded', function() {
             <p class="results-help">Select people groups and click "Add Selected to Top 100" to add them to your tracking list.</p>
             <div class="results-grid">
                 ${sortedResults.map(group => `
-                    <div class="result-card ${selectedUPGs.has(group.name) ? 'selected' : ''}">
+                    <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
                         <input type="checkbox" 
                                class="select-upg" 
                                value="${group.name}"
-                               ${selectedUPGs.has(group.name) ? 'checked' : ''}
-                               ${top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
+                               ${window.selectedUPGs.has(group.name) ? 'checked' : ''}
+                               ${window.top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
                         <h4>${group.name}</h4>
                         <p><strong>Type:</strong> ${group.type}</p>
                         <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
                         <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
                         <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
                         <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
-                        ${top100List.some(item => item.name === group.name) ? 
+                        ${window.top100List.some(item => item.name === group.name) ? 
                             '<p class="already-added">Already in Top 100</p>' : ''}
                     </div>
                 `).join('')}
@@ -227,26 +227,24 @@ document.addEventListener('DOMContentLoaded', function() {
         
         resultsDiv.innerHTML = html;
 
-        // Add event listeners for checkboxes and add button
+        // Add event listeners for checkboxes
         document.querySelectorAll('.select-upg').forEach(checkbox => {
             checkbox.addEventListener('change', (e) => {
                 const card = e.target.closest('.result-card');
                 if (e.target.checked) {
-                    selectedUPGs.add(e.target.value);
+                    window.selectedUPGs.add(e.target.value);
                     card.classList.add('selected');
                 } else {
-                    selectedUPGs.delete(e.target.value);
+                    window.selectedUPGs.delete(e.target.value);
                     card.classList.remove('selected');
                 }
             });
         });
 
+        // Add event listener for Add Selected button
         const addSelectedButton = document.getElementById('add-selected');
         if (addSelectedButton) {
-            // Remove any existing listeners
-            addSelectedButton.replaceWith(addSelectedButton.cloneNode(true));
-            // Add new listener
-            document.getElementById('add-selected').addEventListener('click', addSelectedToTop100);
+            addSelectedButton.addEventListener('click', addSelectedToTop100);
         }
     }
 
@@ -273,22 +271,13 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsDiv.innerHTML = '<p>Searching...</p>';
         const results = [];
         
-        // Search Joshua Project API for FPGs if needed
         if (searchType === 'fpg' || searchType === 'both') {
-            console.log('Searching for FPGs with:', {
-                lat: selectedUPG.lat,
-                lng: selectedUPG.lng,
-                radius: radius
-            });
-            
             const jpResults = await searchJoshuaProject(selectedUPG.lat, selectedUPG.lng, radius);
-            console.log('FPG Results:', jpResults);
             if (jpResults.length) {
                 results.push(...jpResults);
             }
         }
 
-        // Search UUPG data if needed
         if (searchType === 'uupg' || searchType === 'both') {
             const uupgResults = uupgData.filter(group => {
                 if (group.Latitude && group.Longitude) {
@@ -333,12 +322,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load saved Top 100 list from localStorage
 function loadTop100List() {
-    top100Ref.on('value', 
+    window.top100Ref.on('value', 
         (snapshot) => {
-            console.log('Received Firebase update'); // Debug log
+            console.log('Received Firebase update');
             const data = snapshot.val();
-            top100List = data ? Object.values(data) : [];
-            console.log('Updated top100List:', top100List); // Debug log
+            window.top100List = data ? Object.values(data) : [];
+            console.log('Updated top100List:', window.top100List);
             updateTop100Display();
         },
         (error) => {
@@ -350,7 +339,7 @@ function loadTop100List() {
 
 // Save Top 100 list to localStorage
 function saveTop100List() {
-    return top100Ref.set(Object.assign({}, top100List))
+    return window.top100Ref.set(Object.assign({}, window.top100List))
         .catch(error => {
             console.error('Error saving to Firebase:', error);
             alert('Error saving to database. Please try again.');
@@ -359,13 +348,13 @@ function saveTop100List() {
 
 // Add UPG to Top 100 list
 function addToTop100(upg) {
-    if (top100List.length >= 100) {
+    if (window.top100List.length >= 100) {
         alert('Top 100 list is full. Remove some items before adding new ones.');
         return;
     }
     
-    if (!top100List.some(item => item.name === upg.name)) {
-        top100List.push(upg);
+    if (!window.top100List.some(item => item.name === upg.name)) {
+        window.top100List.push(upg);
         saveTop100List();
         updateTop100Display();
         
@@ -380,7 +369,7 @@ function addToTop100(upg) {
 
 // Remove UPG from Top 100 list
 function removeFromTop100(upgName) {
-    top100List = top100List.filter(item => item.name !== upgName);
+    window.top100List = window.top100List.filter(item => item.name !== upgName);
     saveTop100List();
 }
 
@@ -389,9 +378,9 @@ function updateTop100Display() {
     const top100Div = document.getElementById('top-100-list');
     if (!top100Div) return; // Safety check
     
-    console.log('Updating Top 100 display with:', top100List); // Debug log
+    console.log('Updating Top 100 display with:', window.top100List); // Debug log
 
-    top100Div.innerHTML = top100List.map((upg, index) => `
+    top100Div.innerHTML = window.top100List.map((upg, index) => `
         <div class="top-100-item">
             <div class="item-name">
                 <span class="item-number">${index + 1}.</span>
@@ -429,7 +418,7 @@ function sortTop100List(column) {
     sortButton.setAttribute('data-direction', currentSort.direction);
 
     // Sort the list
-    top100List.sort((a, b) => {
+    window.top100List.sort((a, b) => {
         let valueA = a[column];
         let valueB = b[column];
 
@@ -451,54 +440,43 @@ function sortTop100List(column) {
 
 // Add this new function to handle adding multiple UPGs
 function addSelectedToTop100() {
-    console.log('Adding selected UPGs...'); // Debug log
-    const selectedResults = Array.from(selectedUPGs).map(name => {
-        const allResults = document.querySelectorAll('.result-card');
-        for (let card of allResults) {
-            const checkbox = card.querySelector('.select-upg');
-            if (checkbox && checkbox.value === name) {
-                return {
-                    name: name,
-                    type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
-                    country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
-                    population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
-                    religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
-                    distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
-                };
-            }
+    console.log('Adding selected UPGs...', window.selectedUPGs);
+    
+    const selectedResults = Array.from(window.selectedUPGs).map(name => {
+        const card = document.querySelector(`.result-card:has(input[value="${name}"])`);
+        if (card) {
+            return {
+                name: name,
+                type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
+                country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
+                population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
+                religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
+                distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
+            };
         }
         return null;
     }).filter(Boolean);
 
-    console.log('Selected UPGs:', selectedResults); // Debug log
-
     let addedCount = 0;
     for (let upg of selectedResults) {
-        if (top100List.length >= 100) {
+        if (window.top100List.length >= 100) {
             alert('Top 100 list is full. Not all selections could be added.');
             break;
         }
-        if (!top100List.some(item => item.name === upg.name)) {
-            top100List.push(upg);
+        if (!window.top100List.some(item => item.name === upg.name)) {
+            window.top100List.push(upg);
             addedCount++;
         }
     }
 
     if (addedCount > 0) {
-        console.log('Saving to Firebase...'); // Debug log
-        
-        // Save to Firebase with error handling
-        top100Ref.set(Object.assign({}, top100List))
+        // Save to Firebase
+        window.top100Ref.set(Object.assign({}, window.top100List))
             .then(() => {
                 console.log('Successfully saved to Firebase');
-                
-                // Clear selections
-                selectedUPGs.clear();
-                
-                // Show success message
+                window.selectedUPGs.clear();
                 alert(`Added ${addedCount} UPG${addedCount > 1 ? 's' : ''} to Top 100 list`);
-                
-                // Refresh the display
+                updateTop100Display();
                 displayResults(Array.from(document.querySelectorAll('.result-card')).map(card => ({
                     name: card.querySelector('h4').textContent,
                     type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],

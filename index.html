@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <link rel="icon" type="image/x-icon" href="images/favicon.ico">
 </head>
 <body>
     <div class="container">
@@ -87,8 +88,10 @@
         firebase.initializeApp(firebaseConfig);
         
         // Initialize database reference globally
-        const database = firebase.database();
-        const top100Ref = database.ref('top100');
+        window.database = firebase.database();
+        window.top100Ref = database.ref('top100');
+        window.selectedUPGs = new Set();
+        window.top100List = [];
     </script>
     
     <script src="js/main.js"></script>
