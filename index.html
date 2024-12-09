@@ -6,6 +6,8 @@
     <title>Crossover Global People Finder</title>
     <link rel="stylesheet" href="css/styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
     <div class="container">
@@ -69,6 +71,22 @@
         </div>
     </div>
 
+    <script>
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBtzaibXTCspENsEVaN8XF5DkuizsjxVX4",
+            authDomain: "crossover-people-finder.firebaseapp.com",
+            projectId: "crossover-people-finder",
+            storageBucket: "crossover-people-finder.firebasestorage.app",
+            messagingSenderId: "35563852058",
+            appId: "1:35563852058:web:a4b89c5f0fedd06432dca3",
+            databaseURL: "https://crossover-people-finder-default-rtdb.firebaseio.com"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+    </script>
+    
     <script src="js/main.js"></script>
 </body>
 </html> 

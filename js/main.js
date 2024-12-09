@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add this to your state variables at the top
     let selectedUPGs = new Set();
 
+    // Add this near the top with other state variables
+    const database = firebase.database();
+    const top100Ref = database.ref('top100');
+
     // Function to load both CSV files
     async function loadCSVData() {
         try {
@@ -323,16 +327,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load saved Top 100 list from localStorage
 function loadTop100List() {
-    const savedList = localStorage.getItem('top100List');
-    if (savedList) {
-        top100List = JSON.parse(savedList);
+    // Listen for real-time updates
+    top100Ref.on('value', (snapshot) => {
+        const data = snapshot.val();
+        top100List = data ? Object.values(data) : [];
         updateTop100Display();
-    }
+    });
 }
 
 // Save Top 100 list to localStorage
 function saveTop100List() {
-    localStorage.setItem('top100List', JSON.stringify(top100List));
+    // Save to Firebase
+    top100Ref.set(Object.assign({}, top100List));
 }
 
 // Add UPG to Top 100 list
@@ -360,7 +366,6 @@ function addToTop100(upg) {
 function removeFromTop100(upgName) {
     top100List = top100List.filter(item => item.name !== upgName);
     saveTop100List();
-    updateTop100Display();
 }
 
 // Update the Top 100 display
@@ -461,14 +466,11 @@ function addSelectedToTop100() {
     }
 
     if (addedCount > 0) {
-        // Save to localStorage
+        // Save to Firebase
         saveTop100List();
         
         // Clear selections
         selectedUPGs.clear();
-        
-        // Update both displays
-        updateTop100Display();
         
         // Refresh the search results to show updated status
         const currentResults = Array.from(document.querySelectorAll('.result-card')).map(card => ({
