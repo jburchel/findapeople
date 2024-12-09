@@ -448,15 +448,18 @@ function updateTop100Display() {
 
     top100Div.innerHTML = window.top100List.map((upg, index) => `
         <div class="top-100-item">
-            <div class="item-name">
-                <span class="item-number">${index + 1}.</span>
-                ${upg.name}
-                <button class="remove-from-top-100" onclick="removeFromTop100('${upg.name.replace(/'/g, "\\'")}')"
-                        title="Remove from list">Delete</button>
+            <div class="top-100-data">
+                <div class="item-name">
+                    <span class="item-number">${index + 1}.</span>
+                    ${upg.name}
+                </div>
+                <div class="item-country">${upg.country || 'Unknown'}</div>
+                <div class="item-population">${upg.population || 'Unknown'}</div>
+                <div class="item-religion">${upg.religion || 'Unknown'}</div>
             </div>
-            <div class="item-country">${upg.country || 'Unknown'}</div>
-            <div class="item-population">${upg.population || 'Unknown'}</div>
-            <div class="item-religion">${upg.religion || 'Unknown'}</div>
+            <button class="remove-from-top-100" 
+                    onclick="removeFromTop100('${upg.name.replace(/'/g, "\\'")}')"
+                    title="Remove from list">Delete</button>
         </div>
     `).join('');
 }
