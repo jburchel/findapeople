@@ -14,6 +14,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store both CSV datasets globally
     let existingUPGsData = [];
     let uupgData = [];
+    let top100List = [];
+
+    // Add these variables at the top with your other state
+    let currentSort = {
+        column: null,
+        direction: 'asc'
+    };
 
     // Function to load both CSV files
     async function loadCSVData() {
@@ -198,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p>Population: ${group.population}</p>
                         <p>Religion: ${group.religion}</p>
                         <p>Distance: ${Math.round(group.distance)} km</p>
+                        <button class="add-to-top-100" onclick="addToTop100(${JSON.stringify(group).replace(/"/g, '&quot;')})">
+                            Add to Top 100
+                        </button>
                     </div>
                 `).join('')}
             </div>
@@ -274,4 +284,114 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load CSV data when page loads
     loadCSVData();
-}); 
+
+    // Load saved Top 100 list
+    loadTop100List();
+
+    // Add click handlers for sort buttons
+    document.querySelectorAll('.sort-button').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const column = e.target.dataset.sort;
+            sortTop100List(column);
+        });
+    });
+});
+
+// Load saved Top 100 list from localStorage
+function loadTop100List() {
+    const savedList = localStorage.getItem('top100List');
+    if (savedList) {
+        top100List = JSON.parse(savedList);
+        updateTop100Display();
+    }
+}
+
+// Save Top 100 list to localStorage
+function saveTop100List() {
+    localStorage.setItem('top100List', JSON.stringify(top100List));
+}
+
+// Add UPG to Top 100 list
+function addToTop100(upg) {
+    if (top100List.length >= 100) {
+        alert('Top 100 list is full. Remove some items before adding new ones.');
+        return;
+    }
+    
+    // Check if UPG is already in the list
+    if (!top100List.some(item => item.name === upg.name)) {
+        top100List.push(upg);
+        saveTop100List();
+        updateTop100Display();
+    } else {
+        alert('This UPG is already in the Top 100 list.');
+    }
+}
+
+// Remove UPG from Top 100 list
+function removeFromTop100(upgName) {
+    top100List = top100List.filter(item => item.name !== upgName);
+    saveTop100List();
+    updateTop100Display();
+}
+
+// Update the Top 100 display
+function updateTop100Display() {
+    const top100Div = document.getElementById('top-100-list');
+    top100Div.innerHTML = top100List.map((upg, index) => `
+        <div class="top-100-item">
+            <div class="item-name">
+                <span class="item-number">${index + 1}.</span>
+                ${upg.name}
+                <button class="remove-from-top-100" onclick="removeFromTop100('${upg.name.replace("'", "\\'")}')">&times;</button>
+            </div>
+            <div class="item-country">${upg.country}</div>
+            <div class="item-population">${upg.population}</div>
+            <div class="item-religion">${upg.religion}</div>
+        </div>
+    `).join('');
+}
+
+// Add this new function for sorting
+function sortTop100List(column) {
+    const sortButton = document.querySelector(`[data-sort="${column}"]`);
+    const allSortButtons = document.querySelectorAll('.sort-button');
+    
+    // Reset all buttons
+    allSortButtons.forEach(btn => {
+        btn.classList.remove('active');
+        btn.removeAttribute('data-direction');
+    });
+
+    // Update sort direction
+    if (currentSort.column === column) {
+        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        currentSort.column = column;
+        currentSort.direction = 'asc';
+    }
+
+    // Update button state
+    sortButton.classList.add('active');
+    sortButton.setAttribute('data-direction', currentSort.direction);
+
+    // Sort the list
+    top100List.sort((a, b) => {
+        let valueA = a[column];
+        let valueB = b[column];
+
+        // Handle population specially as it should be sorted numerically
+        if (column === 'population') {
+            valueA = parseInt(valueA.replace(/,/g, '')) || 0;
+            valueB = parseInt(valueB.replace(/,/g, '')) || 0;
+        }
+
+        if (currentSort.direction === 'asc') {
+            return valueA > valueB ? 1 : -1;
+        } else {
+            return valueA < valueB ? 1 : -1;
+        }
+    });
+
+    updateTop100Display();
+} 
