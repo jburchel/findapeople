@@ -393,11 +393,14 @@ function saveTop100List() {
     return window.top100Ref.set(Object.assign({}, window.top100List))
         .then(() => {
             console.log('Successfully saved to Firebase');
+            // Don't show success message since it's working
         })
         .catch(error => {
             console.error('Error saving to Firebase:', error);
-            console.error('Full error:', error.message);
-            alert('Error saving to database. Please try again.');
+            // Only show error if it's not a connection warning
+            if (!error.message.includes('connection')) {
+                alert('Error saving to database. Please try again.');
+            }
         });
 }
 
@@ -448,15 +451,13 @@ function updateTop100Display() {
 
     top100Div.innerHTML = window.top100List.map((upg, index) => `
         <div class="top-100-item">
-            <div class="top-100-data">
-                <div class="item-name">
-                    <span class="item-number">${index + 1}.</span>
-                    ${upg.name}
-                </div>
-                <div class="item-country">${upg.country || 'Unknown'}</div>
-                <div class="item-population">${upg.population || 'Unknown'}</div>
-                <div class="item-religion">${upg.religion || 'Unknown'}</div>
+            <div class="item-name">
+                <span class="item-number">${index + 1}.</span>
+                ${upg.name}
             </div>
+            <div class="item-country">${upg.country || 'Unknown'}</div>
+            <div class="item-population">${upg.population || 'Unknown'}</div>
+            <div class="item-religion">${upg.religion || 'Unknown'}</div>
             <button class="remove-from-top-100" 
                     onclick="removeFromTop100('${upg.name.replace(/'/g, "\\'")}')"
                     title="Remove from list">Delete</button>
