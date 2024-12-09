@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('CSV lines count:', lines.length);
         console.log('First line (headers):', lines[0]);
         
-        // Check if we're getting the expected headers
         const headers = lines[0].split(',');
         console.log('Headers found:', headers);
         
@@ -86,10 +85,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const entry = {};
             
             headers.forEach((header, index) => {
-                entry[header.trim()] = values[index]?.trim() || '';
+                let value = values[index]?.trim() || '';
+                value = value.replace(/^["']|["']$/g, '');
+                entry[header.trim()] = value;
             });
             
-            // Log a few sample entries to verify data structure
             if (i <= 3) {
                 console.log(`Sample entry ${i}:`, entry);
             }
@@ -451,9 +451,8 @@ function updateTop100Display() {
             <div class="item-name">
                 <span class="item-number">${index + 1}.</span>
                 ${upg.name}
-                <button class="remove-from-top-100" 
-                        onclick="window.removeFromTop100('${upg.name.replace(/'/g, "\\'")}')"
-                >Delete</button>
+                <button class="remove-from-top-100" onclick="removeFromTop100('${upg.name.replace(/'/g, "\\'")}')"
+                        title="Remove from list">Delete</button>
             </div>
             <div class="item-country">${upg.country || 'Unknown'}</div>
             <div class="item-population">${upg.population || 'Unknown'}</div>
