@@ -36,14 +36,26 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadCSVData() {
         try {
             // Load existing UPGs
-            const existingResponse = await fetch('data/crossover_global.csv');
+            console.log('Fetching existing UPGs CSV file...');
+            const existingResponse = await fetch('data/existing_upgs_updated.csv');
+            if (!existingResponse.ok) {
+                throw new Error(`HTTP error! status: ${existingResponse.status}`);
+            }
             const existingText = await existingResponse.text();
+            console.log('Existing UPGs CSV loaded successfully');
+            
             existingUPGsData = parseCSV(existingText);
-            console.log('Loaded CSV data:', existingUPGsData);
+            console.log('Parsed existing UPGs data:', existingUPGsData.slice(0, 2));
 
             // Load UUPGs
+            console.log('Fetching UUPG CSV file...');
             const uupgResponse = await fetch('data/uupg_data.csv');
+            if (!uupgResponse.ok) {
+                throw new Error(`HTTP error! status: ${uupgResponse.status}`);
+            }
             const uupgText = await uupgResponse.text();
+            console.log('UUPG CSV loaded successfully');
+            
             uupgData = parseCSV(uupgText);
 
             // Populate dropdowns with existing UPGs data
@@ -51,18 +63,23 @@ document.addEventListener('DOMContentLoaded', function() {
         } catch (error) {
             console.error('Error loading CSV:', error);
             console.error('Full error:', error.message);
-            alert('Error loading people groups data. Please try again.');
+            alert('Error loading people groups data. Please check that both CSV files exist in the data folder.');
         }
     }
 
     // Function to parse CSV
     function parseCSV(csvText) {
         const lines = csvText.split('\n');
+        console.log('CSV lines count:', lines.length);
+        console.log('First line (headers):', lines[0]);
+        
         const headers = lines[0].split(',');
+        console.log('Headers:', headers);
+        
         const data = [];
 
         for(let i = 1; i < lines.length; i++) {
-            if(!lines[i].trim()) continue; // Skip empty lines
+            if(!lines[i].trim()) continue;
             
             const values = lines[i].split(',');
             const entry = {};
@@ -74,6 +91,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data.push(entry);
         }
 
+        console.log('Parsed data sample:', data.slice(0, 2));
         return data;
     }
 
