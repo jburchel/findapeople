@@ -191,6 +191,8 @@ button:hover {
     border: none;
     border-radius: 4px;
     height: 28px;
+    line-height: 28px;
+    padding: 0;
     cursor: pointer;
     font-size: 12px;
     width: 70px;
