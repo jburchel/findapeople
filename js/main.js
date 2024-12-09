@@ -33,9 +33,10 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadCSVData() {
         try {
             // Load existing UPGs
-            const existingResponse = await fetch('data/existing_upgs_updated.csv');
+            const existingResponse = await fetch('data/crossover_global.csv');
             const existingText = await existingResponse.text();
             existingUPGsData = parseCSV(existingText);
+            console.log('Loaded CSV data:', existingUPGsData);
 
             // Load UUPGs
             const uupgResponse = await fetch('data/uupg_data.csv');
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             populateCountryDropdown(existingUPGsData);
         } catch (error) {
             console.error('Error loading CSV:', error);
+            console.error('Full error:', error.message);
             alert('Error loading people groups data. Please try again.');
         }
     }
@@ -74,7 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to populate country dropdown
     function populateCountryDropdown(data) {
+        console.log('Populating countries with data:', data);
         const countries = [...new Set(data.map(row => row.country))].sort();
+        console.log('Unique countries found:', countries);
         
         countrySelect.innerHTML = '<option value="">--Select Country--</option>';
         countries.forEach(country => {
