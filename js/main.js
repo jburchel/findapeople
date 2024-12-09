@@ -191,22 +191,24 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Sort results by distance
         const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
 
         const html = `
             <h3>Found ${results.length} People Groups:</h3>
+            <p class="results-help">Click "Add to Top 100" to add a people group to your tracking list.</p>
             <div class="results-grid">
                 ${sortedResults.map(group => `
                     <div class="result-card">
                         <h4>${group.name}</h4>
-                        <p>Type: ${group.type}</p>
-                        <p>Country: ${group.country}</p>
-                        <p>Population: ${group.population}</p>
-                        <p>Religion: ${group.religion}</p>
-                        <p>Distance: ${Math.round(group.distance)} km</p>
-                        <button class="add-to-top-100" onclick="addToTop100(${JSON.stringify(group).replace(/"/g, '&quot;')})">
-                            Add to Top 100
+                        <p><strong>Type:</strong> ${group.type}</p>
+                        <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
+                        <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
+                        <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
+                        <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
+                        <button class="add-to-top-100" 
+                                onclick="addToTop100(${JSON.stringify(group).replace(/"/g, '&quot;')})"
+                                ${top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
+                            ${top100List.some(item => item.name === group.name) ? 'Already in Top 100' : 'Add to Top 100'}
                         </button>
                     </div>
                 `).join('')}
@@ -318,13 +320,17 @@ function addToTop100(upg) {
         return;
     }
     
-    // Check if UPG is already in the list
     if (!top100List.some(item => item.name === upg.name)) {
         top100List.push(upg);
         saveTop100List();
         updateTop100Display();
-    } else {
-        alert('This UPG is already in the Top 100 list.');
+        
+        // Update the button state
+        const button = document.querySelector(`button[onclick*="${upg.name.replace(/"/g, '\\"')}"]`);
+        if (button) {
+            button.disabled = true;
+            button.textContent = 'Added to Top 100';
+        }
     }
 }
 

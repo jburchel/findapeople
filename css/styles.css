@@ -121,6 +121,9 @@ button:hover {
     padding: 20px;
     border-radius: 6px;
     border-left: 4px solid var(--primary-blue);
+    display: flex;
+    flex-direction: column;
+    position: relative;
 }
 
 .result-card h4 {
@@ -181,15 +184,29 @@ button:hover {
 }
 
 .add-to-top-100 {
-    background-color: var(--primary-blue);
+    background-color: var(--primary-green);
     color: var(--white);
     padding: 8px 16px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    margin-top: 10px;
+    margin-top: 15px;
     font-size: 14px;
     width: auto;
+    align-self: flex-end;
+    transition: background-color 0.3s ease;
+}
+
+.add-to-top-100:hover {
+    background-color: #328B3E;
+}
+
+/* Add a success message style */
+.add-success {
+    color: var(--primary-green);
+    font-size: 14px;
+    margin-top: 5px;
+    text-align: right;
 }
 
 /* Add these styles for the sorting interface */
@@ -233,5 +250,21 @@ button:hover {
 
 .sort-button.active[data-direction="desc"]::after {
     content: " ↓";
+}
+
+.results-help {
+    color: var(--gray);
+    margin-bottom: 20px;
+    font-style: italic;
+}
+
+.add-to-top-100:disabled {
+    background-color: var(--gray);
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.result-card strong {
+    color: var(--primary-blue);
 }
  
