@@ -6,6 +6,9 @@ const top100Ref = database.ref('top100');
 let selectedUPGs = new Set();
 let top100List = [];
 
+// Add this near the top of your file with other global variables
+window.removeFromTop100 = removeFromTop100;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
@@ -373,23 +376,35 @@ function addToTop100(upg) {
 
 // Remove UPG from Top 100 list
 function removeFromTop100(upgName) {
+    console.log('Removing UPG:', upgName);
     window.top100List = window.top100List.filter(item => item.name !== upgName);
-    saveTop100List();
+    
+    // Save to Firebase
+    window.top100Ref.set(Object.assign({}, window.top100List))
+        .then(() => {
+            console.log('Successfully removed from Firebase');
+            updateTop100Display();
+        })
+        .catch(error => {
+            console.error('Error saving to Firebase:', error);
+            alert('Error removing from database. Please try again.');
+        });
 }
 
 // Update the Top 100 display
 function updateTop100Display() {
     const top100Div = document.getElementById('top-100-list');
-    if (!top100Div) return; // Safety check
+    if (!top100Div) return;
     
-    console.log('Updating Top 100 display with:', window.top100List); // Debug log
+    console.log('Updating Top 100 display with:', window.top100List);
 
     top100Div.innerHTML = window.top100List.map((upg, index) => `
         <div class="top-100-item">
             <div class="item-name">
                 <span class="item-number">${index + 1}.</span>
                 ${upg.name}
-                <button class="remove-from-top-100" onclick="removeFromTop100('${upg.name.replace("'", "\\'")}')">&times;</button>
+                <button class="remove-from-top-100" 
+                        onclick="window.removeFromTop100('${upg.name.replace(/'/g, "\\'")}')">&times;</button>
             </div>
             <div class="item-country">${upg.country || 'Unknown'}</div>
             <div class="item-population">${upg.population || 'Unknown'}</div>
