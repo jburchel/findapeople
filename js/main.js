@@ -9,6 +9,12 @@ let top100List = [];
 // Add this near the top of your file with other global variables
 window.removeFromTop100 = removeFromTop100;
 
+// Move this outside the DOMContentLoaded event
+const currentSort = {
+    column: null,
+    direction: 'asc'
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
@@ -25,12 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Store CSV datasets globally
     let existingUPGsData = [];
     let uupgData = [];
-
-    // Add these variables at the top with your other state
-    let currentSort = {
-        column: null,
-        direction: 'asc'
-    };
 
     // Function to load both CSV files
     async function loadCSVData() {
@@ -393,12 +393,11 @@ function saveTop100List() {
     return window.top100Ref.set(Object.assign({}, window.top100List))
         .then(() => {
             console.log('Successfully saved to Firebase');
-            // Don't show success message since it's working
         })
         .catch(error => {
             console.error('Error saving to Firebase:', error);
-            // Only show error if it's not a connection warning
-            if (!error.message.includes('connection')) {
+            // Only show error for non-connection issues
+            if (!error.message.includes('connection') && !error.message.includes('network')) {
                 alert('Error saving to database. Please try again.');
             }
         });
@@ -447,8 +446,6 @@ function updateTop100Display() {
     const top100Div = document.getElementById('top-100-list');
     if (!top100Div) return;
     
-    console.log('Updating Top 100 display with:', window.top100List);
-
     top100Div.innerHTML = window.top100List.map((upg, index) => `
         <div class="top-100-item">
             <div class="item-name">
@@ -465,18 +462,16 @@ function updateTop100Display() {
     `).join('');
 }
 
-// Add this new function for sorting
+// Update sortTop100List to use window.currentSort
 function sortTop100List(column) {
     const sortButton = document.querySelector(`[data-sort="${column}"]`);
     const allSortButtons = document.querySelectorAll('.sort-button');
     
-    // Reset all buttons
     allSortButtons.forEach(btn => {
         btn.classList.remove('active');
         btn.removeAttribute('data-direction');
     });
 
-    // Update sort direction
     if (currentSort.column === column) {
         currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
     } else {
@@ -484,26 +479,21 @@ function sortTop100List(column) {
         currentSort.direction = 'asc';
     }
 
-    // Update button state
     sortButton.classList.add('active');
     sortButton.setAttribute('data-direction', currentSort.direction);
 
-    // Sort the list
     window.top100List.sort((a, b) => {
         let valueA = a[column];
         let valueB = b[column];
 
-        // Handle population specially as it should be sorted numerically
         if (column === 'population') {
             valueA = parseInt(valueA.replace(/,/g, '')) || 0;
             valueB = parseInt(valueB.replace(/,/g, '')) || 0;
         }
 
-        if (currentSort.direction === 'asc') {
-            return valueA > valueB ? 1 : -1;
-        } else {
-            return valueA < valueB ? 1 : -1;
-        }
+        return currentSort.direction === 'asc' 
+            ? (valueA > valueB ? 1 : -1)
+            : (valueA < valueB ? 1 : -1);
     });
 
     updateTop100Display();
