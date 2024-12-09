@@ -10,7 +10,7 @@ let top100List = [];
 window.removeFromTop100 = removeFromTop100;
 
 // Move this outside the DOMContentLoaded event
-const currentSort = {
+window.currentSort = {
     column: null,
     direction: 'asc'
 };
@@ -472,15 +472,15 @@ function sortTop100List(column) {
         btn.removeAttribute('data-direction');
     });
 
-    if (currentSort.column === column) {
-        currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+    if (window.currentSort.column === column) {
+        window.currentSort.direction = window.currentSort.direction === 'asc' ? 'desc' : 'asc';
     } else {
-        currentSort.column = column;
-        currentSort.direction = 'asc';
+        window.currentSort.column = column;
+        window.currentSort.direction = 'asc';
     }
 
     sortButton.classList.add('active');
-    sortButton.setAttribute('data-direction', currentSort.direction);
+    sortButton.setAttribute('data-direction', window.currentSort.direction);
 
     window.top100List.sort((a, b) => {
         let valueA = a[column];
@@ -491,13 +491,16 @@ function sortTop100List(column) {
             valueB = parseInt(valueB.replace(/,/g, '')) || 0;
         }
 
-        return currentSort.direction === 'asc' 
+        return window.currentSort.direction === 'asc' 
             ? (valueA > valueB ? 1 : -1)
             : (valueA < valueB ? 1 : -1);
     });
 
     updateTop100Display();
 }
+
+// Make the function globally accessible
+window.sortTop100List = sortTop100List;
 
 // Add this new function to handle adding multiple UPGs
 function addSelectedToTop100() {

@@ -195,6 +195,10 @@ button:hover {
     font-size: 12px;
     width: 70px;
     justify-self: end;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .remove-from-top-100:hover {
