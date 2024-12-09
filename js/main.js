@@ -1,3 +1,7 @@
+// Move Firebase database reference outside the DOMContentLoaded event
+const database = firebase.database();
+const top100Ref = database.ref('top100');
+
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
@@ -24,10 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add this to your state variables at the top
     let selectedUPGs = new Set();
-
-    // Add this near the top with other state variables
-    const database = firebase.database();
-    const top100Ref = database.ref('top100');
 
     // Function to load both CSV files
     async function loadCSVData() {
@@ -327,18 +327,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load saved Top 100 list from localStorage
 function loadTop100List() {
-    // Listen for real-time updates
-    top100Ref.on('value', (snapshot) => {
-        const data = snapshot.val();
-        top100List = data ? Object.values(data) : [];
-        updateTop100Display();
-    });
+    top100Ref.on('value', 
+        (snapshot) => {
+            console.log('Received Firebase update'); // Debug log
+            const data = snapshot.val();
+            top100List = data ? Object.values(data) : [];
+            console.log('Updated top100List:', top100List); // Debug log
+            updateTop100Display();
+        },
+        (error) => {
+            console.error('Error loading from Firebase:', error);
+            alert('Error loading data from database. Please refresh the page.');
+        }
+    );
 }
 
 // Save Top 100 list to localStorage
 function saveTop100List() {
-    // Save to Firebase
-    top100Ref.set(Object.assign({}, top100List));
+    return top100Ref.set(Object.assign({}, top100List))
+        .catch(error => {
+            console.error('Error saving to Firebase:', error);
+            alert('Error saving to database. Please try again.');
+        });
 }
 
 // Add UPG to Top 100 list
@@ -435,6 +445,7 @@ function sortTop100List(column) {
 
 // Add this new function to handle adding multiple UPGs
 function addSelectedToTop100() {
+    console.log('Adding selected UPGs...'); // Debug log
     const selectedResults = Array.from(selectedUPGs).map(name => {
         const allResults = document.querySelectorAll('.result-card');
         for (let card of allResults) {
@@ -453,6 +464,8 @@ function addSelectedToTop100() {
         return null;
     }).filter(Boolean);
 
+    console.log('Selected UPGs:', selectedResults); // Debug log
+
     let addedCount = 0;
     for (let upg of selectedResults) {
         if (top100List.length >= 100) {
@@ -466,26 +479,32 @@ function addSelectedToTop100() {
     }
 
     if (addedCount > 0) {
-        // Save to Firebase
-        saveTop100List();
+        console.log('Saving to Firebase...'); // Debug log
         
-        // Clear selections
-        selectedUPGs.clear();
-        
-        // Refresh the search results to show updated status
-        const currentResults = Array.from(document.querySelectorAll('.result-card')).map(card => ({
-            name: card.querySelector('h4').textContent,
-            type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
-            country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
-            population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
-            religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
-            distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
-        }));
-        
-        // Show success message
-        alert(`Added ${addedCount} UPG${addedCount > 1 ? 's' : ''} to Top 100 list`);
-        
-        // Refresh the display
-        displayResults(currentResults);
+        // Save to Firebase with error handling
+        top100Ref.set(Object.assign({}, top100List))
+            .then(() => {
+                console.log('Successfully saved to Firebase');
+                
+                // Clear selections
+                selectedUPGs.clear();
+                
+                // Show success message
+                alert(`Added ${addedCount} UPG${addedCount > 1 ? 's' : ''} to Top 100 list`);
+                
+                // Refresh the display
+                displayResults(Array.from(document.querySelectorAll('.result-card')).map(card => ({
+                    name: card.querySelector('h4').textContent,
+                    type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
+                    country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
+                    population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
+                    religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
+                    distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
+                })));
+            })
+            .catch(error => {
+                console.error('Error saving to Firebase:', error);
+                alert('Error saving to database. Please try again.');
+            });
     }
 } 
