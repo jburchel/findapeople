@@ -22,6 +22,9 @@ document.addEventListener('DOMContentLoaded', function() {
         direction: 'asc'
     };
 
+    // Add this to your state variables at the top
+    let selectedUPGs = new Set();
+
     // Function to load both CSV files
     async function loadCSVData() {
         try {
@@ -195,27 +198,46 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const html = `
             <h3>Found ${results.length} People Groups:</h3>
-            <p class="results-help">Click "Add to Top 100" to add a people group to your tracking list.</p>
+            <p class="results-help">Select people groups and click "Add Selected to Top 100" to add them to your tracking list.</p>
             <div class="results-grid">
                 ${sortedResults.map(group => `
-                    <div class="result-card">
+                    <div class="result-card ${selectedUPGs.has(group.name) ? 'selected' : ''}">
+                        <input type="checkbox" 
+                               class="select-upg" 
+                               value="${group.name}"
+                               ${selectedUPGs.has(group.name) ? 'checked' : ''}
+                               ${top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
                         <h4>${group.name}</h4>
                         <p><strong>Type:</strong> ${group.type}</p>
                         <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
                         <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
                         <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
                         <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
-                        <button class="add-to-top-100" 
-                                onclick="addToTop100(${JSON.stringify(group).replace(/"/g, '&quot;')})"
-                                ${top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
-                            ${top100List.some(item => item.name === group.name) ? 'Already in Top 100' : 'Add to Top 100'}
-                        </button>
+                        ${top100List.some(item => item.name === group.name) ? 
+                            '<p class="already-added">Already in Top 100</p>' : ''}
                     </div>
                 `).join('')}
             </div>
+            <button id="add-selected" class="add-selected-button">Add Selected to Top 100</button>
         `;
         
         resultsDiv.innerHTML = html;
+
+        // Add event listeners for checkboxes and add button
+        document.querySelectorAll('.select-upg').forEach(checkbox => {
+            checkbox.addEventListener('change', (e) => {
+                const card = e.target.closest('.result-card');
+                if (e.target.checked) {
+                    selectedUPGs.add(e.target.value);
+                    card.classList.add('selected');
+                } else {
+                    selectedUPGs.delete(e.target.value);
+                    card.classList.remove('selected');
+                }
+            });
+        });
+
+        document.getElementById('add-selected').addEventListener('click', addSelectedToTop100);
     }
 
     // Event Listeners
@@ -400,4 +422,51 @@ function sortTop100List(column) {
     });
 
     updateTop100Display();
+}
+
+// Add this new function to handle adding multiple UPGs
+function addSelectedToTop100() {
+    const selectedResults = Array.from(selectedUPGs).map(name => {
+        const allResults = document.querySelectorAll('.result-card');
+        for (let card of allResults) {
+            const checkbox = card.querySelector('.select-upg');
+            if (checkbox.value === name) {
+                const groupData = {
+                    name: name,
+                    type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
+                    country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
+                    population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
+                    religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
+                    distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
+                };
+                return groupData;
+            }
+        }
+    }).filter(Boolean);
+
+    let addedCount = 0;
+    for (let upg of selectedResults) {
+        if (top100List.length >= 100) {
+            alert('Top 100 list is full. Not all selections could be added.');
+            break;
+        }
+        if (!top100List.some(item => item.name === upg.name)) {
+            top100List.push(upg);
+            addedCount++;
+        }
+    }
+
+    if (addedCount > 0) {
+        saveTop100List();
+        updateTop100Display();
+        selectedUPGs.clear();
+        displayResults(Array.from(document.querySelectorAll('.result-card')).map(card => ({
+            name: card.querySelector('h4').textContent,
+            type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
+            country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
+            population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
+            religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
+            distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
+        })));
+    }
 } 

@@ -121,9 +121,13 @@ button:hover {
     padding: 20px;
     border-radius: 6px;
     border-left: 4px solid var(--primary-blue);
-    display: flex;
-    flex-direction: column;
     position: relative;
+    transition: all 0.3s ease;
+}
+
+.result-card.selected {
+    background-color: #e8f5e9;
+    border-left: 4px solid var(--primary-green);
 }
 
 .result-card h4 {
@@ -266,5 +270,40 @@ button:hover {
 
 .result-card strong {
     color: var(--primary-blue);
+}
+
+.select-upg {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.already-added {
+    color: var(--gray);
+    font-style: italic;
+    margin-top: 10px;
+}
+
+.add-selected-button {
+    background-color: var(--primary-green);
+    color: var(--white);
+    padding: 15px 30px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 20px auto;
+    display: block;
+    max-width: 300px;
+    width: 100%;
+    transition: background-color 0.3s ease;
+}
+
+.add-selected-button:hover {
+    background-color: #328B3E;
 }
  
