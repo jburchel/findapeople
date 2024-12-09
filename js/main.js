@@ -366,6 +366,10 @@ function removeFromTop100(upgName) {
 // Update the Top 100 display
 function updateTop100Display() {
     const top100Div = document.getElementById('top-100-list');
+    if (!top100Div) return; // Safety check
+    
+    console.log('Updating Top 100 display with:', top100List); // Debug log
+
     top100Div.innerHTML = top100List.map((upg, index) => `
         <div class="top-100-item">
             <div class="item-name">
@@ -373,9 +377,9 @@ function updateTop100Display() {
                 ${upg.name}
                 <button class="remove-from-top-100" onclick="removeFromTop100('${upg.name.replace("'", "\\'")}')">&times;</button>
             </div>
-            <div class="item-country">${upg.country}</div>
-            <div class="item-population">${upg.population}</div>
-            <div class="item-religion">${upg.religion}</div>
+            <div class="item-country">${upg.country || 'Unknown'}</div>
+            <div class="item-population">${upg.population || 'Unknown'}</div>
+            <div class="item-religion">${upg.religion || 'Unknown'}</div>
         </div>
     `).join('');
 }
@@ -430,8 +434,8 @@ function addSelectedToTop100() {
         const allResults = document.querySelectorAll('.result-card');
         for (let card of allResults) {
             const checkbox = card.querySelector('.select-upg');
-            if (checkbox.value === name) {
-                const groupData = {
+            if (checkbox && checkbox.value === name) {
+                return {
                     name: name,
                     type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
                     country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
@@ -439,9 +443,9 @@ function addSelectedToTop100() {
                     religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
                     distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
                 };
-                return groupData;
             }
         }
+        return null;
     }).filter(Boolean);
 
     let addedCount = 0;
@@ -457,16 +461,29 @@ function addSelectedToTop100() {
     }
 
     if (addedCount > 0) {
+        // Save to localStorage
         saveTop100List();
-        updateTop100Display();
+        
+        // Clear selections
         selectedUPGs.clear();
-        displayResults(Array.from(document.querySelectorAll('.result-card')).map(card => ({
+        
+        // Update both displays
+        updateTop100Display();
+        
+        // Refresh the search results to show updated status
+        const currentResults = Array.from(document.querySelectorAll('.result-card')).map(card => ({
             name: card.querySelector('h4').textContent,
             type: card.querySelector('p:nth-child(3)').textContent.split(': ')[1],
             country: card.querySelector('p:nth-child(4)').textContent.split(': ')[1],
             population: card.querySelector('p:nth-child(5)').textContent.split(': ')[1],
             religion: card.querySelector('p:nth-child(6)').textContent.split(': ')[1],
             distance: parseInt(card.querySelector('p:nth-child(7)').textContent.split(': ')[1])
-        })));
+        }));
+        
+        // Show success message
+        alert(`Added ${addedCount} UPG${addedCount > 1 ? 's' : ''} to Top 100 list`);
+        
+        // Refresh the display
+        displayResults(currentResults);
     }
 } 
