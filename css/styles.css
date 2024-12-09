@@ -1,10 +1,11 @@
 :root {
-    /* Crossover Global brand colors from brand book */
-    --primary-blue: #003E7E;      /* Dark Blue */
-    --secondary-blue: #00A0DF;    /* Light Blue */
-    --primary-green: #95C11F;     /* Brand Green */
+    /* Crossover Global official brand colors */
+    --primary-blue: #183963;    /* PANTONE: 534, RGB: 24 57 99 */
+    --primary-green: #39A949;   /* PANTONE: 7739, RGB: 57 169 73 */
+    --gray: #7F7F7F;           /* PANTONE: 840 C, RGB: 127 127 127 */
+    --white: #FFFFFF;          /* PANTONE: P 75-1 U, RGB: 255 255 255 */
     --text-dark: #333333;
-    --background-light: #FFFFFF;
+    --background-light: var(--white);
     --background-gray: #F5F5F5;
 }
 
@@ -66,7 +67,7 @@ select, input[type="number"] {
 
 select:focus, input[type="number"]:focus {
     outline: none;
-    border-color: var(--secondary-blue);
+    border-color: var(--primary-green);
 }
 
 .radio-group {
@@ -81,8 +82,8 @@ select:focus, input[type="number"]:focus {
 }
 
 button {
-    background-color: var(--primary-green);  /* Changed from orange to brand green */
-    color: white;
+    background-color: var(--primary-green);
+    color: var(--white);
     padding: 15px 30px;
     border: none;
     border-radius: 6px;
@@ -97,7 +98,7 @@ button {
 }
 
 button:hover {
-    background-color: #86AE1C;  /* Slightly darker shade of the brand green */
+    background-color: #328B3E;  /* Slightly darker shade of the brand green */
 }
 
 .results-container {
@@ -119,7 +120,7 @@ button:hover {
     background-color: var(--background-gray);
     padding: 20px;
     border-radius: 6px;
-    border-left: 4px solid var(--secondary-blue);  /* Changed from orange to light blue */
+    border-left: 4px solid var(--primary-blue);
 }
 
 .result-card h4 {
