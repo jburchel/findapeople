@@ -73,8 +73,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('CSV lines count:', lines.length);
         console.log('First line (headers):', lines[0]);
         
+        // Check if we're getting the expected headers
         const headers = lines[0].split(',');
-        console.log('Headers:', headers);
+        console.log('Headers found:', headers);
         
         const data = [];
 
@@ -88,17 +89,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 entry[header.trim()] = values[index]?.trim() || '';
             });
             
+            // Log a few sample entries to verify data structure
+            if (i <= 3) {
+                console.log(`Sample entry ${i}:`, entry);
+            }
+            
             data.push(entry);
         }
 
-        console.log('Parsed data sample:', data.slice(0, 2));
+        console.log(`Total entries parsed: ${data.length}`);
         return data;
     }
 
     // Function to populate country dropdown
     function populateCountryDropdown(data) {
-        console.log('Populating countries with data:', data);
-        const countries = [...new Set(data.map(row => row.country))].sort();
+        console.log('Starting populateCountryDropdown with data length:', data.length);
+        
+        // Check what property name is being used for country
+        const sampleEntry = data[0];
+        console.log('Sample entry properties:', Object.keys(sampleEntry));
+        console.log('Sample entry:', sampleEntry);
+        
+        // Try to find the country property
+        const countryProperty = Object.keys(sampleEntry).find(key => 
+            key.toLowerCase().includes('country') || 
+            key.toLowerCase() === 'nation' || 
+            key.toLowerCase() === 'location'
+        );
+        
+        console.log('Found country property:', countryProperty);
+        
+        const countries = [...new Set(data.map(row => row[countryProperty]))].sort();
         console.log('Unique countries found:', countries);
         
         countrySelect.innerHTML = '<option value="">--Select Country--</option>';
@@ -110,6 +131,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 countrySelect.appendChild(option);
             }
         });
+        
+        console.log('Dropdown populated with options count:', countrySelect.options.length);
     }
 
     // Function to populate UPG dropdown based on selected country
