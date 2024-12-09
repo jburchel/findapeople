@@ -1,8 +1,8 @@
 :root {
-    /* Crossover Global brand colors */
-    --primary-blue: #003E7E;
-    --secondary-blue: #0076FF;
-    --accent-orange: #FF6B00;
+    /* Crossover Global brand colors from brand book */
+    --primary-blue: #003E7E;      /* Dark Blue */
+    --secondary-blue: #00A0DF;    /* Light Blue */
+    --primary-green: #95C11F;     /* Brand Green */
     --text-dark: #333333;
     --background-light: #FFFFFF;
     --background-gray: #F5F5F5;
@@ -81,7 +81,7 @@ select:focus, input[type="number"]:focus {
 }
 
 button {
-    background-color: var(--accent-orange);
+    background-color: var(--primary-green);  /* Changed from orange to brand green */
     color: white;
     padding: 15px 30px;
     border: none;
@@ -97,7 +97,7 @@ button {
 }
 
 button:hover {
-    background-color: #E66000;
+    background-color: #86AE1C;  /* Slightly darker shade of the brand green */
 }
 
 .results-container {
@@ -119,7 +119,7 @@ button:hover {
     background-color: var(--background-gray);
     padding: 20px;
     border-radius: 6px;
-    border-left: 4px solid var(--accent-orange);
+    border-left: 4px solid var(--secondary-blue);  /* Changed from orange to light blue */
 }
 
 .result-card h4 {
