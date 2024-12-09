@@ -85,6 +85,10 @@
 
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
+        
+        // Initialize database reference globally
+        const database = firebase.database();
+        const top100Ref = database.ref('top100');
     </script>
     
     <script src="js/main.js"></script>

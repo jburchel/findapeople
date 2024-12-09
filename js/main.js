@@ -2,6 +2,10 @@
 const database = firebase.database();
 const top100Ref = database.ref('top100');
 
+// Move these declarations to the global scope
+let selectedUPGs = new Set();
+let top100List = [];
+
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
@@ -15,19 +19,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const resultsDiv = document.getElementById('results');
     const searchTypeInputs = document.getElementsByName('searchType');
 
-    // Store both CSV datasets globally
+    // Store CSV datasets globally
     let existingUPGsData = [];
     let uupgData = [];
-    let top100List = [];
 
     // Add these variables at the top with your other state
     let currentSort = {
         column: null,
         direction: 'asc'
     };
-
-    // Add this to your state variables at the top
-    let selectedUPGs = new Set();
 
     // Function to load both CSV files
     async function loadCSVData() {
@@ -241,7 +241,13 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
 
-        document.getElementById('add-selected').addEventListener('click', addSelectedToTop100);
+        const addSelectedButton = document.getElementById('add-selected');
+        if (addSelectedButton) {
+            // Remove any existing listeners
+            addSelectedButton.replaceWith(addSelectedButton.cloneNode(true));
+            // Add new listener
+            document.getElementById('add-selected').addEventListener('click', addSelectedToTop100);
+        }
     }
 
     // Event Listeners
