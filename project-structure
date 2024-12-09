@@ -4,5 +4,7 @@ findapeople/
 │   └── styles.css
 ├── js/
 │   └── main.js
-└── data/
-    └── crossover_global.csv 
+├── data/
+│   └── crossover_global.csv
+└── images/
+    └── crossover-global-logo.png 
