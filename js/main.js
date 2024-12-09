@@ -370,16 +370,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Load saved Top 100 list from localStorage
 function loadTop100List() {
+    console.log('Setting up Firebase listener...');
     window.top100Ref.on('value', 
         (snapshot) => {
-            console.log('Received Firebase update');
+            console.log('Received Firebase update, raw data:', snapshot.val());
             const data = snapshot.val();
             window.top100List = data ? Object.values(data) : [];
-            console.log('Updated top100List:', window.top100List);
+            console.log('Processed top100List:', window.top100List);
             updateTop100Display();
         },
         (error) => {
             console.error('Error loading from Firebase:', error);
+            console.error('Full error:', error.message);
             alert('Error loading data from database. Please refresh the page.');
         }
     );
@@ -387,9 +389,14 @@ function loadTop100List() {
 
 // Save Top 100 list to localStorage
 function saveTop100List() {
+    console.log('Saving to Firebase:', window.top100List);
     return window.top100Ref.set(Object.assign({}, window.top100List))
+        .then(() => {
+            console.log('Successfully saved to Firebase');
+        })
         .catch(error => {
             console.error('Error saving to Firebase:', error);
+            console.error('Full error:', error.message);
             alert('Error saving to database. Please try again.');
         });
 }
@@ -445,7 +452,8 @@ function updateTop100Display() {
                 <span class="item-number">${index + 1}.</span>
                 ${upg.name}
                 <button class="remove-from-top-100" 
-                        onclick="window.removeFromTop100('${upg.name.replace(/'/g, "\\'")}')">&times;</button>
+                        onclick="window.removeFromTop100('${upg.name.replace(/'/g, "\\'")}')"
+                >Delete</button>
             </div>
             <div class="item-country">${upg.country || 'Unknown'}</div>
             <div class="item-population">${upg.population || 'Unknown'}</div>
