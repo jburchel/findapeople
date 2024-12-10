@@ -16,7 +16,40 @@ window.currentSort = {
     direction: 'asc'
 };
 
-// Move displayResults outside of DOMContentLoaded and make it globally accessible
+// Define sortAndDisplayResults before it's used
+function sortAndDisplayResults(sortBy) {
+    if (!currentSearchResults.length) return;
+    
+    console.log('Sorting by:', sortBy);
+    console.log('Results before sort:', currentSearchResults);
+
+    const sortedResults = [...currentSearchResults].sort((a, b) => {
+        switch(sortBy) {
+            case 'type':
+                return (a.type || '').localeCompare(b.type || '');
+            case 'country':
+                return (a.country || '').localeCompare(b.country || '');
+            case 'population':
+                const popA = parseInt((a.population || '0').replace(/[^\d]/g, '')) || 0;
+                const popB = parseInt((b.population || '0').replace(/[^\d]/g, '')) || 0;
+                return popB - popA; // Descending order for population
+            case 'religion':
+                return (a.religion || '').localeCompare(b.religion || '');
+            case 'distance':
+                return (a.distance || 0) - (b.distance || 0);
+            default:
+                return 0;
+        }
+    });
+
+    console.log('Results after sort:', sortedResults);
+    window.displayResults(sortedResults, false);
+}
+
+// Make sortAndDisplayResults globally accessible
+window.sortAndDisplayResults = sortAndDisplayResults;
+
+// Define displayResults before it's used
 function displayResults(results, saveResults = true) {
     if (saveResults) {
         currentSearchResults = results;
@@ -576,34 +609,4 @@ function addSelectedToTop100() {
                 alert('Error saving to database. Please try again.');
             });
     }
-}
-
-// Add these new functions
-function sortAndDisplayResults(sortBy) {
-    if (!currentSearchResults.length) return;
-    
-    console.log('Sorting by:', sortBy); // Debug log
-    console.log('Results before sort:', currentSearchResults); // Debug log
-
-    const sortedResults = [...currentSearchResults].sort((a, b) => {
-        switch(sortBy) {
-            case 'type':
-                return (a.type || '').localeCompare(b.type || '');
-            case 'country':
-                return (a.country || '').localeCompare(b.country || '');
-            case 'population':
-                const popA = parseInt((a.population || '0').replace(/[^\d]/g, '')) || 0;
-                const popB = parseInt((b.population || '0').replace(/[^\d]/g, '')) || 0;
-                return popB - popA; // Descending order for population
-            case 'religion':
-                return (a.religion || '').localeCompare(b.religion || '');
-            case 'distance':
-                return (a.distance || 0) - (b.distance || 0);
-            default:
-                return 0;
-        }
-    });
-
-    console.log('Results after sort:', sortedResults); // Debug log
-    displayResults(sortedResults, false);
 } 
