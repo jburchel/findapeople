@@ -64,8 +64,6 @@ function displayResults(results, saveResults = true) {
         return;
     }
 
-    const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
-
     // Get current sort selection if it exists
     const currentSort = document.getElementById('sort-results')?.value || 'distance';
 
@@ -83,7 +81,7 @@ function displayResults(results, saveResults = true) {
         </div>
         <p class="results-help">Select UPGs to add them to your Top 100 list</p>
         <div class="results-grid">
-            ${sortedResults.map(group => `
+            ${results.map(group => `
                 <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
                     <input type="checkbox" 
                            class="select-upg" 
@@ -417,9 +415,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 })));
             }
 
+            // Sort initially by distance
+            const sortedResults = results.sort((a, b) => a.distance - b.distance);
+            
             // Store the results globally and display them
-            currentSearchResults = results;
-            displayResults(results);
+            currentSearchResults = sortedResults;
+            displayResults(sortedResults);
 
         } catch (error) {
             console.error('Error during search:', error);
