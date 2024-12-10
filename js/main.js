@@ -248,23 +248,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const resultsDiv = document.getElementById('results');
         resultsDiv.style.display = 'block';
 
-        // Add help text and button for adding to Top 100
-        let resultsHTML = `
-            <div class="sort-dropdown-container">
-                <label for="sort-results">Sort By:</label>
-                <select id="sort-results">
-                    <option value="distance">Distance</option>
-                    <option value="type">Type</option>
-                    <option value="country">Country</option>
-                    <option value="population">Population</option>
-                    <option value="religion">Religion</option>
-                </select>
-            </div>
-            <p class="results-help">Select UPGs to add them to your Top 100 list</p>
-            <button class="add-selected-button" onclick="addSelectedToTop100()">Add Selected to Top 100</button>
-            <div class="results-grid">
-        `;
-
         if (results.length === 0) {
             resultsDiv.innerHTML = '<p>No people groups found within the specified radius.</p>';
             return;
@@ -272,25 +255,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
 
-        resultsHTML += sortedResults.map(group => `
-            <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
-                <input type="checkbox" 
-                       class="select-upg" 
-                       value="${group.name}"
-                       ${window.selectedUPGs.has(group.name) ? 'checked' : ''}
-                       ${window.top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
-                <h4>${group.name}</h4>
-                <p><strong>Type:</strong> ${group.type}</p>
-                <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
-                <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
-                <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
-                <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
-                ${window.top100List.some(item => item.name === group.name) ? 
-                    '<p class="already-added">Already in Top 100</p>' : ''}
+        const html = `
+            <h3>Found ${results.length} People Groups:</h3>
+            <p class="results-help">Select UPGs to add them to your Top 100 list</p>
+            <div class="results-grid">
+                ${sortedResults.map(group => `
+                    <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
+                        <input type="checkbox" 
+                               class="select-upg" 
+                               value="${group.name}"
+                               ${window.selectedUPGs.has(group.name) ? 'checked' : ''}
+                               ${window.top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
+                        <h4>${group.name}</h4>
+                        <p><strong>Type:</strong> ${group.type}</p>
+                        <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
+                        <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
+                        <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
+                        <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
+                        ${window.top100List.some(item => item.name === group.name) ? 
+                            '<p class="already-added">Already in Top 100</p>' : ''}
+                    </div>
+                `).join('')}
             </div>
-        `).join('');
+            <button id="add-selected" class="add-selected-button">Add Selected to Top 100</button>
+        `;
 
-        resultsDiv.innerHTML = resultsHTML;
+        resultsDiv.innerHTML = html;
 
         // Add event listeners for checkboxes
         document.querySelectorAll('.select-upg').forEach(checkbox => {
@@ -311,13 +301,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (addSelectedButton) {
             addSelectedButton.addEventListener('click', addSelectedToTop100);
         }
-
-        // Reattach event listener to sort dropdown
-        const sortResultsSelect = document.getElementById('sort-results');
-        sortResultsSelect.addEventListener('change', function() {
-            const sortBy = this.value;
-            sortAndDisplayResults(sortBy);
-        });
     }
 
     // Event Listeners
@@ -393,10 +376,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Add sort handler for results
     const sortResultsSelect = document.getElementById('sort-results');
-    sortResultsSelect.addEventListener('change', function() {
-        const sortBy = this.value;
-        sortAndDisplayResults(sortBy);
-    });
+    if (sortResultsSelect) {
+        sortResultsSelect.addEventListener('change', function(e) {
+            console.log('Sort dropdown changed:', e.target.value); // Debug log
+            sortAndDisplayResults(e.target.value);
+        });
+    }
 });
 
 // Load saved Top 100 list from localStorage
@@ -591,25 +576,29 @@ function addSelectedToTop100() {
 // Add these new functions
 function sortAndDisplayResults(sortBy) {
     if (!currentSearchResults.length) return;
+    
+    console.log('Sorting by:', sortBy); // Debug log
+    console.log('Results before sort:', currentSearchResults); // Debug log
 
     const sortedResults = [...currentSearchResults].sort((a, b) => {
         switch(sortBy) {
             case 'type':
-                return a.type.localeCompare(b.type);
+                return (a.type || '').localeCompare(b.type || '');
             case 'country':
-                return a.country.localeCompare(b.country);
+                return (a.country || '').localeCompare(b.country || '');
             case 'population':
-                const popA = parseInt(a.population.replace(/,/g, '')) || 0;
-                const popB = parseInt(b.population.replace(/,/g, '')) || 0;
+                const popA = parseInt((a.population || '0').replace(/[^\d]/g, '')) || 0;
+                const popB = parseInt((b.population || '0').replace(/[^\d]/g, '')) || 0;
                 return popB - popA; // Descending order for population
             case 'religion':
-                return a.religion.localeCompare(b.religion);
+                return (a.religion || '').localeCompare(b.religion || '');
             case 'distance':
-                return a.distance - b.distance;
+                return (a.distance || 0) - (b.distance || 0);
             default:
                 return 0;
         }
     });
 
+    console.log('Results after sort:', sortedResults); // Debug log
     displayResults(sortedResults, false);
 } 
