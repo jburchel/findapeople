@@ -326,4 +326,24 @@ button:hover {
 .add-selected-button:hover {
     background-color: #328B3E;
 }
+
+.sort-dropdown-container {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-dropdown-container label {
+    display: inline;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.sort-dropdown-container select {
+    width: auto;
+    min-width: 150px;
+    padding: 8px 12px;
+    margin: 0;
+}
  
