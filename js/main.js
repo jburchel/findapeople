@@ -67,8 +67,21 @@ function displayResults(results, saveResults = true) {
 
     const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
 
+    // Get current sort selection if it exists
+    const currentSort = document.getElementById('sort-results')?.value || 'distance';
+
     const html = `
         <h3>Found ${results.length} People Groups:</h3>
+        <div class="sort-dropdown-container">
+            <label for="sort-results">Sort By:</label>
+            <select id="sort-results">
+                <option value="distance" ${currentSort === 'distance' ? 'selected' : ''}>Distance</option>
+                <option value="type" ${currentSort === 'type' ? 'selected' : ''}>Type</option>
+                <option value="country" ${currentSort === 'country' ? 'selected' : ''}>Country</option>
+                <option value="population" ${currentSort === 'population' ? 'selected' : ''}>Population</option>
+                <option value="religion" ${currentSort === 'religion' ? 'selected' : ''}>Religion</option>
+            </select>
+        </div>
         <p class="results-help">Select UPGs to add them to your Top 100 list</p>
         <div class="results-grid">
             ${sortedResults.map(group => `
@@ -112,6 +125,15 @@ function displayResults(results, saveResults = true) {
     const addSelectedButton = document.getElementById('add-selected');
     if (addSelectedButton) {
         addSelectedButton.addEventListener('click', addSelectedToTop100);
+    }
+
+    // Reattach sort event listener
+    const sortResultsSelect = document.getElementById('sort-results');
+    if (sortResultsSelect) {
+        sortResultsSelect.addEventListener('change', function(e) {
+            console.log('Sort dropdown changed:', e.target.value);
+            sortAndDisplayResults(e.target.value);
+        });
     }
 }
 
