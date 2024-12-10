@@ -21,8 +21,7 @@ function sortAndDisplayResults(sortBy) {
     if (!currentSearchResults.length) return;
     
     console.log('Sorting by:', sortBy);
-    console.log('Results before sort:', currentSearchResults);
-
+    
     const sortedResults = [...currentSearchResults].sort((a, b) => {
         switch(sortBy) {
             case 'type':
@@ -42,8 +41,8 @@ function sortAndDisplayResults(sortBy) {
         }
     });
 
-    console.log('Results after sort:', sortedResults);
-    window.displayResults(sortedResults, false);
+    // Display sorted results without saving them as new results
+    displayResults(sortedResults, false);
 }
 
 // Make sortAndDisplayResults globally accessible
@@ -386,38 +385,46 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsDiv.innerHTML = '<p>Searching...</p>';
         const results = [];
         
-        if (searchType === 'fpg' || searchType === 'both') {
-            const jpResults = await searchJoshuaProject(selectedUPG.lat, selectedUPG.lng, radius);
-            if (jpResults.length) {
-                results.push(...jpResults);
-            }
-        }
-
-        if (searchType === 'uupg' || searchType === 'both') {
-            const uupgResults = uupgData.filter(group => {
-                if (group.Latitude && group.Longitude) {
-                    const distance = calculateDistance(
-                        parseFloat(selectedUPG.lat),
-                        parseFloat(selectedUPG.lng),
-                        parseFloat(group.Latitude),
-                        parseFloat(group.Longitude)
-                    );
-                    group.distance = distance;
-                    return distance <= radius;
+        try {
+            if (searchType === 'fpg' || searchType === 'both') {
+                const jpResults = await searchJoshuaProject(selectedUPG.lat, selectedUPG.lng, radius);
+                if (jpResults.length) {
+                    results.push(...jpResults);
                 }
-                return false;
-            });
-            results.push(...uupgResults.map(r => ({
-                name: r.PeopleName,
-                country: r.country,
-                population: r.Population,
-                religion: r.PrimaryReligion,
-                distance: r.distance,
-                type: 'UUPG'
-            })));
-        }
+            }
 
-        displayResults(results);
+            if (searchType === 'uupg' || searchType === 'both') {
+                const uupgResults = uupgData.filter(group => {
+                    if (group.Latitude && group.Longitude) {
+                        const distance = calculateDistance(
+                            parseFloat(selectedUPG.lat),
+                            parseFloat(selectedUPG.lng),
+                            parseFloat(group.Latitude),
+                            parseFloat(group.Longitude)
+                        );
+                        group.distance = distance;
+                        return distance <= radius;
+                    }
+                    return false;
+                });
+                results.push(...uupgResults.map(r => ({
+                    name: r.PeopleName,
+                    country: r.CountryName,
+                    population: r.Population,
+                    religion: r.PrimaryReligion,
+                    distance: Math.round(r.distance),
+                    type: 'UUPG'
+                })));
+            }
+
+            // Store the results globally and display them
+            currentSearchResults = results;
+            displayResults(results);
+
+        } catch (error) {
+            console.error('Error during search:', error);
+            resultsDiv.innerHTML = '<p>An error occurred during the search. Please try again.</p>';
+        }
     });
 
     // Load CSV data when page loads
