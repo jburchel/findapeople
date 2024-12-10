@@ -16,6 +16,75 @@ window.currentSort = {
     direction: 'asc'
 };
 
+// Move displayResults outside of DOMContentLoaded and make it globally accessible
+function displayResults(results, saveResults = true) {
+    if (saveResults) {
+        currentSearchResults = results;
+    }
+
+    const resultsDiv = document.getElementById('results');
+    if (!resultsDiv) return;
+    
+    resultsDiv.style.display = 'block';
+
+    if (results.length === 0) {
+        resultsDiv.innerHTML = '<p>No people groups found within the specified radius.</p>';
+        return;
+    }
+
+    const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
+
+    const html = `
+        <h3>Found ${results.length} People Groups:</h3>
+        <p class="results-help">Select UPGs to add them to your Top 100 list</p>
+        <div class="results-grid">
+            ${sortedResults.map(group => `
+                <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
+                    <input type="checkbox" 
+                           class="select-upg" 
+                           value="${group.name}"
+                           ${window.selectedUPGs.has(group.name) ? 'checked' : ''}
+                           ${window.top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
+                    <h4>${group.name}</h4>
+                    <p><strong>Type:</strong> ${group.type}</p>
+                    <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
+                    <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
+                    <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
+                    <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
+                    ${window.top100List.some(item => item.name === group.name) ? 
+                        '<p class="already-added">Already in Top 100</p>' : ''}
+                </div>
+            `).join('')}
+        </div>
+        <button id="add-selected" class="add-selected-button">Add Selected to Top 100</button>
+    `;
+
+    resultsDiv.innerHTML = html;
+
+    // Add event listeners for checkboxes
+    document.querySelectorAll('.select-upg').forEach(checkbox => {
+        checkbox.addEventListener('change', (e) => {
+            const card = e.target.closest('.result-card');
+            if (e.target.checked) {
+                window.selectedUPGs.add(e.target.value);
+                card.classList.add('selected');
+            } else {
+                window.selectedUPGs.delete(e.target.value);
+                card.classList.remove('selected');
+            }
+        });
+    });
+
+    // Add event listener for Add Selected button
+    const addSelectedButton = document.getElementById('add-selected');
+    if (addSelectedButton) {
+        addSelectedButton.addEventListener('click', addSelectedToTop100);
+    }
+}
+
+// Make displayResults globally accessible
+window.displayResults = displayResults;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
@@ -236,70 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Full error details:', error.message);
             alert('Error fetching FPG data from Joshua Project. Check console for details.');
             return [];
-        }
-    }
-
-    // Function to display results - updated to handle both data types
-    function displayResults(results, saveResults = true) {
-        if (saveResults) {
-            currentSearchResults = results; // Save the results for later sorting
-        }
-
-        const resultsDiv = document.getElementById('results');
-        resultsDiv.style.display = 'block';
-
-        if (results.length === 0) {
-            resultsDiv.innerHTML = '<p>No people groups found within the specified radius.</p>';
-            return;
-        }
-
-        const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
-
-        const html = `
-            <h3>Found ${results.length} People Groups:</h3>
-            <p class="results-help">Select UPGs to add them to your Top 100 list</p>
-            <div class="results-grid">
-                ${sortedResults.map(group => `
-                    <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
-                        <input type="checkbox" 
-                               class="select-upg" 
-                               value="${group.name}"
-                               ${window.selectedUPGs.has(group.name) ? 'checked' : ''}
-                               ${window.top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
-                        <h4>${group.name}</h4>
-                        <p><strong>Type:</strong> ${group.type}</p>
-                        <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
-                        <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
-                        <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
-                        <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
-                        ${window.top100List.some(item => item.name === group.name) ? 
-                            '<p class="already-added">Already in Top 100</p>' : ''}
-                    </div>
-                `).join('')}
-            </div>
-            <button id="add-selected" class="add-selected-button">Add Selected to Top 100</button>
-        `;
-
-        resultsDiv.innerHTML = html;
-
-        // Add event listeners for checkboxes
-        document.querySelectorAll('.select-upg').forEach(checkbox => {
-            checkbox.addEventListener('change', (e) => {
-                const card = e.target.closest('.result-card');
-                if (e.target.checked) {
-                    window.selectedUPGs.add(e.target.value);
-                    card.classList.add('selected');
-                } else {
-                    window.selectedUPGs.delete(e.target.value);
-                    card.classList.remove('selected');
-                }
-            });
-        });
-
-        // Add event listener for Add Selected button
-        const addSelectedButton = document.getElementById('add-selected');
-        if (addSelectedButton) {
-            addSelectedButton.addEventListener('click', addSelectedToTop100);
         }
     }
 
