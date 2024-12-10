@@ -67,6 +67,7 @@ function displayResults(results, saveResults = true) {
     // Get current sort selection if it exists
     const currentSort = document.getElementById('sort-results')?.value || 'distance';
 
+    // Create the HTML
     const html = `
         <h3>Found ${results.length} People Groups:</h3>
         <div class="sort-dropdown-container">
@@ -81,27 +82,40 @@ function displayResults(results, saveResults = true) {
         </div>
         <p class="results-help">Select UPGs to add them to your Top 100 list</p>
         <div class="results-grid">
-            ${results.map(group => `
-                <div class="result-card ${window.selectedUPGs.has(group.name) ? 'selected' : ''}">
-                    <input type="checkbox" 
-                           class="select-upg" 
-                           value="${group.name}"
-                           ${window.selectedUPGs.has(group.name) ? 'checked' : ''}
-                           ${window.top100List.some(item => item.name === group.name) ? 'disabled' : ''}>
-                    <h4>${group.name}</h4>
-                    <p><strong>Type:</strong> ${group.type}</p>
-                    <p><strong>Country:</strong> ${group.country || 'Unknown'}</p>
-                    <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
-                    <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
-                    <p><strong>Distance:</strong> ${Math.round(group.distance)} km</p>
-                    ${window.top100List.some(item => item.name === group.name) ? 
-                        '<p class="already-added">Already in Top 100</p>' : ''}
-                </div>
-            `).join('')}
+            ${results.map(group => {
+                // Ensure all values exist to prevent undefined errors
+                const groupData = {
+                    name: group.name || '',
+                    type: group.type || 'Unknown',
+                    country: group.country || 'Unknown',
+                    population: group.population || 'Unknown',
+                    religion: group.religion || 'Unknown',
+                    distance: Math.round(group.distance || 0)
+                };
+
+                return `
+                    <div class="result-card ${window.selectedUPGs.has(groupData.name) ? 'selected' : ''}">
+                        <input type="checkbox" 
+                               class="select-upg" 
+                               value="${groupData.name}"
+                               ${window.selectedUPGs.has(groupData.name) ? 'checked' : ''}
+                               ${window.top100List.some(item => item.name === groupData.name) ? 'disabled' : ''}>
+                        <h4>${groupData.name}</h4>
+                        <p><strong>Type:</strong> ${groupData.type}</p>
+                        <p><strong>Country:</strong> ${groupData.country}</p>
+                        <p><strong>Population:</strong> ${groupData.population}</p>
+                        <p><strong>Religion:</strong> ${groupData.religion}</p>
+                        <p><strong>Distance:</strong> ${groupData.distance} km</p>
+                        ${window.top100List.some(item => item.name === groupData.name) ? 
+                            '<p class="already-added">Already in Top 100</p>' : ''}
+                    </div>
+                `;
+            }).join('')}
         </div>
         <button id="add-selected" class="add-selected-button">Add Selected to Top 100</button>
     `;
 
+    // Update the DOM
     resultsDiv.innerHTML = html;
 
     // Add event listeners for checkboxes
@@ -127,6 +141,7 @@ function displayResults(results, saveResults = true) {
     // Reattach sort event listener
     const sortResultsSelect = document.getElementById('sort-results');
     if (sortResultsSelect) {
+        sortResultsSelect.value = currentSort; // Ensure the correct option is selected
         sortResultsSelect.addEventListener('change', function(e) {
             console.log('Sort dropdown changed:', e.target.value);
             sortAndDisplayResults(e.target.value);
