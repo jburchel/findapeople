@@ -316,31 +316,35 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedLat = parseFloat(lat).toFixed(4);
             const formattedLng = parseFloat(lng).toFixed(4);
             
-            const url = `${JP_API_BASE_URL}/people_groups.json?api_key=${JP_API_KEY}&latitude=${formattedLat}&longitude=${formattedLng}&radius=${radius}`;
-            console.log('Calling Joshua Project API:', url);
+            // Update API request to include FPG-specific parameters
+            const url = `${JP_API_BASE_URL}/people_groups.json`;
+            const params = {
+                api_key: JP_API_KEY,
+                latitude: formattedLat,
+                longitude: formattedLng,
+                radius: radius,
+                fields: 'PeopleID3,PeopNameInCountry,PeopNameAcrossCountries,Ctry,Population,PrimaryReligion,Latitude,Longitude,PercentEvangelical,PercentAdherents',
+                jpscale: '1',           // 1 = Unreached on Joshua Project Scale
+                least_reached: 'Y',     // Y = Considered Least-reached/unreached
+                pc_adherent_lt: '2',    // Less than 2% Christian adherents
+                pc_evangelical_lt: '0.1' // Less than 0.1% evangelical
+            };
 
-            const response = await fetch(url);
+            const queryString = Object.entries(params)
+                .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
+                .join('&');
+            
+            const fullUrl = `${url}?${queryString}`;
+            console.log('Calling Joshua Project API:', fullUrl);
+
+            const response = await fetch(fullUrl);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
 
-            // Log the first result to see its exact structure
-            if (data.length > 0) {
-                console.log('Sample API Response:', {
-                    firstResult: data[0],
-                    availableFields: Object.keys(data[0])
-                });
-            }
-
-            // Calculate distances and filter results
+            // Now we only need to filter by distance since FPG criteria are handled by API
             const filteredResults = data.filter(pg => {
-                // First check if this is an FPG
-                if (pg.FrontierType !== 'FPG') {
-                    return false;
-                }
-
-                // Then check coordinates and distance
                 if (pg.Latitude && pg.Longitude) {
                     const distance = calculateDistance(
                         parseFloat(lat),
@@ -364,6 +368,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 distance: Math.round(pg.distance),
                 type: 'FPG'
             }));
+
         } catch (error) {
             console.error('Error fetching from Joshua Project:', error);
             console.error('Full error details:', error.message);
