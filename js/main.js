@@ -429,6 +429,105 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Update the searchUUPG function to properly handle coordinates and country
+    async function searchUUPG(lat, lng, radius) {
+        try {
+            const response = await fetch('data/uupg_data.csv');
+            const csvText = await response.text();
+            const rows = csvText.split('\n').map(row => row.split(','));
+            const headers = rows[0].map(h => h.trim());
+
+            // Get index positions for required fields
+            const latIndex = headers.indexOf('latitude');
+            const lngIndex = headers.indexOf('longitude');
+            const nameIndex = headers.indexOf('name');
+            const countryIndex = headers.indexOf('country');
+            const popIndex = headers.indexOf('population');
+            const religionIndex = headers.indexOf('religion');
+
+            console.log('UUPG CSV Headers:', headers);
+            console.log('Search coordinates:', { lat, lng, radius });
+
+            const filteredResults = rows.slice(1) // Skip header row
+                .filter(row => {
+                    if (!row[latIndex] || !row[lngIndex]) {
+                        console.log(`Skipping ${row[nameIndex]}: Missing coordinates`);
+                        return false;
+                    }
+
+                    const uupgLat = parseFloat(row[latIndex]);
+                    const uupgLng = parseFloat(row[lngIndex]);
+
+                    if (isNaN(uupgLat) || isNaN(uupgLng)) {
+                        console.log(`Invalid coordinates for ${row[nameIndex]}: ${row[latIndex]},${row[lngIndex]}`);
+                        return false;
+                    }
+
+                    const distance = calculateDistance(
+                        parseFloat(lat),
+                        parseFloat(lng),
+                        uupgLat,
+                        uupgLng
+                    );
+
+                    // Log each potential match
+                    console.log(`UUPG ${row[nameIndex]}:`, {
+                        coordinates: `${uupgLat},${uupgLng}`,
+                        distance: `${distance.toFixed(2)}km`,
+                        withinRadius: distance <= radius
+                    });
+
+                    if (distance <= radius) {
+                        row.distance = distance; // Add distance to row data
+                        return true;
+                    }
+                    return false;
+                })
+                .map(row => ({
+                    name: row[nameIndex],
+                    country: row[countryIndex],
+                    population: row[popIndex],
+                    religion: row[religionIndex],
+                    distance: Math.round(row.distance),
+                    type: 'UUPG',
+                    coordinates: `${row[latIndex]},${row[lngIndex]}` // Add coordinates for verification
+                }))
+                .sort((a, b) => a.distance - b.distance); // Sort by distance
+
+            console.log(`Found ${filteredResults.length} UUPGs within ${radius}km radius`);
+            console.log('Filtered UUPG results:', filteredResults);
+
+            return filteredResults;
+
+        } catch (error) {
+            console.error('Error searching UUPGs:', error);
+            return [];
+        }
+    }
+
+    // Update the combined search function
+    async function searchPeopleGroups(lat, lng, radius, type) {
+        console.log('Starting search with parameters:', { lat, lng, radius, type });
+        
+        let results = [];
+        
+        if (type === 'FPG' || type === 'Both') {
+            const fpgResults = await searchJoshuaProject(lat, lng, radius);
+            results = results.concat(fpgResults);
+        }
+        
+        if (type === 'UUPG' || type === 'Both') {
+            const uupgResults = await searchUUPG(lat, lng, radius);
+            results = results.concat(uupgResults);
+        }
+
+        // Sort combined results by distance
+        results.sort((a, b) => a.distance - b.distance);
+        
+        console.log(`Total results found: ${results.length}`);
+        return results;
+    }
+
     // Event Listeners
     countrySelect.addEventListener('change', function() {
         if(this.value) {
