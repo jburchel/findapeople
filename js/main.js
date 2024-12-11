@@ -429,13 +429,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update the searchUUPG function to properly handle coordinates and country
+    // Update the searchUUPG function to properly handle filtering
     async function searchUUPG(lat, lng, radius) {
         try {
             const response = await fetch('data/uupg_data.csv');
             const csvText = await response.text();
             const rows = csvText.split('\n').map(row => row.split(','));
-            const headers = rows[0].map(h => h.trim());
+            const headers = rows[0];
 
             // Get index positions for required fields
             const latIndex = headers.indexOf('latitude');
@@ -444,12 +444,22 @@ document.addEventListener('DOMContentLoaded', function() {
             const countryIndex = headers.indexOf('country');
             const popIndex = headers.indexOf('population');
             const religionIndex = headers.indexOf('religion');
+            const engagementIndex = headers.indexOf('Evangelical Engagement');
 
-            console.log('UUPG CSV Headers:', headers);
-            console.log('Search coordinates:', { lat, lng, radius });
+            console.log('UUPG Search Parameters:', { lat, lng, radius });
 
             const filteredResults = rows.slice(1) // Skip header row
                 .filter(row => {
+                    // First filter: Check if unengaged
+                    const engagement = row[engagementIndex]?.trim().toLowerCase();
+                    const isUnengaged = engagement === 'unengaged';
+                    
+                    if (!isUnengaged) {
+                        console.log(`Skipping ${row[nameIndex]}: Engaged people group`);
+                        return false;
+                    }
+
+                    // Second filter: Check coordinates and distance
                     if (!row[latIndex] || !row[lngIndex]) {
                         console.log(`Skipping ${row[nameIndex]}: Missing coordinates`);
                         return false;
@@ -459,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const uupgLng = parseFloat(row[lngIndex]);
 
                     if (isNaN(uupgLat) || isNaN(uupgLng)) {
-                        console.log(`Invalid coordinates for ${row[nameIndex]}: ${row[latIndex]},${row[lngIndex]}`);
+                        console.log(`Skipping ${row[nameIndex]}: Invalid coordinates`);
                         return false;
                     }
 
@@ -470,18 +480,13 @@ document.addEventListener('DOMContentLoaded', function() {
                         uupgLng
                     );
 
-                    // Log each potential match
                     console.log(`UUPG ${row[nameIndex]}:`, {
                         coordinates: `${uupgLat},${uupgLng}`,
                         distance: `${distance.toFixed(2)}km`,
                         withinRadius: distance <= radius
                     });
 
-                    if (distance <= radius) {
-                        row.distance = distance; // Add distance to row data
-                        return true;
-                    }
-                    return false;
+                    return distance <= radius;
                 })
                 .map(row => ({
                     name: row[nameIndex],
@@ -490,13 +495,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     religion: row[religionIndex],
                     distance: Math.round(row.distance),
                     type: 'UUPG',
-                    coordinates: `${row[latIndex]},${row[lngIndex]}` // Add coordinates for verification
+                    coordinates: `${row[latIndex]},${row[lngIndex]}`
                 }))
-                .sort((a, b) => a.distance - b.distance); // Sort by distance
+                .sort((a, b) => a.distance - b.distance);
 
             console.log(`Found ${filteredResults.length} UUPGs within ${radius}km radius`);
-            console.log('Filtered UUPG results:', filteredResults);
-
             return filteredResults;
 
         } catch (error) {
@@ -507,16 +510,18 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Update the combined search function
     async function searchPeopleGroups(lat, lng, radius, type) {
-        console.log('Starting search with parameters:', { lat, lng, radius, type });
+        console.log('Starting combined search:', { lat, lng, radius, type });
         
         let results = [];
         
         if (type === 'FPG' || type === 'Both') {
+            console.log('Searching FPGs...');
             const fpgResults = await searchJoshuaProject(lat, lng, radius);
             results = results.concat(fpgResults);
         }
         
         if (type === 'UUPG' || type === 'Both') {
+            console.log('Searching UUPGs...');
             const uupgResults = await searchUUPG(lat, lng, radius);
             results = results.concat(uupgResults);
         }
@@ -524,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sort combined results by distance
         results.sort((a, b) => a.distance - b.distance);
         
-        console.log(`Total results found: ${results.length}`);
+        console.log(`Total combined results: ${results.length}`);
         return results;
     }
 
