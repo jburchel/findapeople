@@ -159,7 +159,7 @@ window.displayResults = displayResults;
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
-    const JP_API_BASE_URL = 'https://api.joshuaproject.net/v1';
+    const JP_API_BASE_URL = 'https://joshuaproject.net/api/v2';
 
     // Get DOM elements
     const countrySelect = document.getElementById('country');
@@ -316,8 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedLat = parseFloat(lat).toFixed(4);
             const formattedLng = parseFloat(lng).toFixed(4);
             
-            // Update API request to include FPG-specific parameters
-            const url = `${JP_API_BASE_URL}/people_groups.json`;
+            const url = `${JP_API_BASE_URL}/people_groups`;
             const params = {
                 api_key: JP_API_KEY,
                 latitude: formattedLat,
@@ -330,21 +329,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 pc_evangelical_lt: '0.1' // Less than 0.1% evangelical
             };
 
-            const queryString = Object.entries(params)
-                .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-                .join('&');
+            console.log('Searching for FPGs with params:', params);
             
-            const fullUrl = `${url}?${queryString}`;
-            console.log('Calling Joshua Project API:', fullUrl);
-
-            const response = await fetch(fullUrl);
+            const response = await fetch(`${url}?${new URLSearchParams(params)}`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
+            
             const data = await response.json();
+            console.log('Raw API response:', data);
 
-            // Now we only need to filter by distance since FPG criteria are handled by API
-            const filteredResults = data.filter(pg => {
+            if (!data.data || !Array.isArray(data.data)) {
+                console.log('No data returned from API');
+                return [];
+            }
+
+            // Filter and process results
+            const filteredResults = data.data.filter(pg => {
                 if (pg.Latitude && pg.Longitude) {
                     const distance = calculateDistance(
                         parseFloat(lat),
@@ -366,11 +367,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 population: pg.Population,
                 religion: pg.PrimaryReligion,
                 distance: Math.round(pg.distance),
-                type: 'FPG'
+                type: 'FPG',
+                evangelical: pg.PercentEvangelical,
+                adherents: pg.PercentAdherents
             }));
 
         } catch (error) {
-            console.error('Error fetching from Joshua Project:', error);
+            console.error('Error fetching FPG data:', error);
             console.error('Full error details:', error.message);
             alert('Error fetching FPG data from Joshua Project. Check console for details.');
             return [];
