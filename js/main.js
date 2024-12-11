@@ -335,19 +335,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Calculate distances and filter results
             const filteredResults = data.filter(pg => {
-                // Log the coordinates we're using
-                console.log('Processing:', {
-                    name: pg.PeopleID3,
-                    latitude: pg.Latitude,
-                    longitude: pg.Longitude,
-                    distance: calculateDistance(
-                        parseFloat(lat),
-                        parseFloat(lng),
-                        parseFloat(pg.Latitude),
-                        parseFloat(pg.Longitude)
-                    )
-                });
+                // First check if this is an FPG
+                if (pg.FrontierType !== 'FPG') {
+                    return false;
+                }
 
+                // Then check coordinates and distance
                 if (pg.Latitude && pg.Longitude) {
                     const distance = calculateDistance(
                         parseFloat(lat),
@@ -361,7 +354,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return false;
             });
 
-            console.log(`Found ${filteredResults.length} groups within ${radius} km`);
+            console.log(`Found ${filteredResults.length} FPGs within ${radius} km`);
 
             return filteredResults.map(pg => ({
                 name: pg.PeopNameInCountry || pg.PeopNameAcrossCountries,
