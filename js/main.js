@@ -299,15 +299,41 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to calculate distance between two points
     function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // Earth's radius in km
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
+        // Convert coordinates from strings and validate
+        lat1 = parseFloat(lat1);
+        lon1 = parseFloat(lon1);
+        lat2 = parseFloat(lat2);
+        lon2 = parseFloat(lon2);
+
+        // Validate coordinates
+        if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+            console.warn('Invalid coordinates:', { lat1, lon1, lat2, lon2 });
+            return Infinity; // Return Infinity to exclude invalid coordinates
+        }
+
+        // Convert to radians
+        const lat1Rad = (lat1 * Math.PI) / 180;
+        const lon1Rad = (lon1 * Math.PI) / 180;
+        const lat2Rad = (lat2 * Math.PI) / 180;
+        const lon2Rad = (lon2 * Math.PI) / 180;
+
+        // Haversine formula
+        const dLat = lat2Rad - lat1Rad;
+        const dLon = lon2Rad - lon1Rad;
         const a = 
             Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.cos(lat1Rad) * Math.cos(lat2Rad) * 
             Math.sin(dLon/2) * Math.sin(dLon/2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
+        const distance = 6371 * c; // Earth's radius in km * c
+
+        console.log(`Distance calculation:`, {
+            from: `${lat1},${lon1}`,
+            to: `${lat2},${lon2}`,
+            distance: `${distance.toFixed(2)}km`
+        });
+
+        return distance;
     }
 
     // Function to search Joshua Project API
@@ -316,6 +342,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const formattedLat = parseFloat(lat).toFixed(4);
             const formattedLng = parseFloat(lng).toFixed(4);
             
+            console.log(`Searching from coordinates: ${formattedLat}, ${formattedLng} with radius ${radius}km`);
+
             const url = `${JP_API_BASE_URL}/people_groups`;
             const params = {
                 api_key: JP_API_KEY,
@@ -323,13 +351,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 longitude: formattedLng,
                 radius: radius,
                 fields: 'PeopleID3,PeopNameInCountry,PeopNameAcrossCountries,Ctry,Population,PrimaryReligion,Latitude,Longitude,PercentEvangelical,PercentAdherents',
-                jpscale: '1',           // 1 = Unreached on Joshua Project Scale
-                least_reached: 'Y',     // Y = Considered Least-reached/unreached
-                pc_adherent_lt: '2',    // Less than 2% Christian adherents
-                pc_evangelical_lt: '0.1' // Less than 0.1% evangelical
+                jpscale: '1',
+                least_reached: 'Y',
+                pc_adherent_lt: '2',
+                pc_evangelical_lt: '0.1'
             };
 
-            console.log('Searching for FPGs with params:', params);
+            console.log('API request params:', params);
             
             const response = await fetch(`${url}?${new URLSearchParams(params)}`);
             if (!response.ok) {
@@ -344,33 +372,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 return [];
             }
 
-            // Filter and process results
+            // Filter and process results with strict distance checking
             const filteredResults = data.data.filter(pg => {
-                if (pg.Latitude && pg.Longitude) {
-                    const distance = calculateDistance(
-                        parseFloat(lat),
-                        parseFloat(lng),
-                        parseFloat(pg.Latitude),
-                        parseFloat(pg.Longitude)
-                    );
+                // Validate coordinates
+                if (!pg.Latitude || !pg.Longitude) {
+                    console.log(`Skipping ${pg.PeopNameInCountry}: Missing coordinates`);
+                    return false;
+                }
+
+                const distance = calculateDistance(
+                    formattedLat,
+                    formattedLng,
+                    pg.Latitude,
+                    pg.Longitude
+                );
+
+                // Log each potential match
+                console.log(`${pg.PeopNameInCountry} (${pg.Ctry}):`, {
+                    coordinates: `${pg.Latitude},${pg.Longitude}`,
+                    distance: `${distance.toFixed(2)}km`,
+                    withinRadius: distance <= radius
+                });
+
+                if (distance <= radius) {
                     pg.distance = distance;
-                    return distance <= radius;
+                    return true;
                 }
                 return false;
             });
 
-            console.log(`Found ${filteredResults.length} FPGs within ${radius} km`);
+            console.log(`Found ${filteredResults.length} FPGs within ${radius}km radius`);
 
-            return filteredResults.map(pg => ({
-                name: pg.PeopNameInCountry || pg.PeopNameAcrossCountries,
-                country: pg.Ctry,
-                population: pg.Population,
-                religion: pg.PrimaryReligion,
-                distance: Math.round(pg.distance),
-                type: 'FPG',
-                evangelical: pg.PercentEvangelical,
-                adherents: pg.PercentAdherents
-            }));
+            // Sort by distance
+            const sortedResults = filteredResults
+                .sort((a, b) => a.distance - b.distance)
+                .map(pg => ({
+                    name: pg.PeopNameInCountry || pg.PeopNameAcrossCountries,
+                    country: pg.Ctry,
+                    population: pg.Population,
+                    religion: pg.PrimaryReligion,
+                    distance: Math.round(pg.distance),
+                    type: 'FPG',
+                    evangelical: pg.PercentEvangelical,
+                    adherents: pg.PercentAdherents,
+                    coordinates: `${pg.Latitude},${pg.Longitude}` // Add coordinates for verification
+                }));
+
+            console.log('Final filtered and sorted results:', sortedResults);
+            return sortedResults;
 
         } catch (error) {
             console.error('Error fetching FPG data:', error);
