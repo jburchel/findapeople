@@ -72,10 +72,10 @@
             <h2>Top 100 UPGs</h2>
             <div class="top-100-header">
                 <div class="column-headers">
-                    <button class="sort-button" onclick="window.sortTop100List('name')">Name ↕</button>
-                    <button class="sort-button" onclick="window.sortTop100List('country')">Country ↕</button>
-                    <button class="sort-button" onclick="window.sortTop100List('population')">Population ↕</button>
-                    <button class="sort-button" onclick="window.sortTop100List('religion')">Religion ↕</button>
+                    <div class="sort-header" data-sort="name" data-label="Name" onclick="sortTop100List('name')">Name</div>
+                    <div class="sort-header" data-sort="country" data-label="Country" onclick="sortTop100List('country')">Country</div>
+                    <div class="sort-header" data-sort="population" data-label="Population" onclick="sortTop100List('population')">Population</div>
+                    <div class="sort-header" data-sort="religion" data-label="Religion" onclick="sortTop100List('religion')">Religion</div>
                 </div>
             </div>
             <div id="top-100-list" class="top-100-list">

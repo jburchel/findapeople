@@ -16,6 +16,10 @@ window.currentSort = {
     direction: 'asc'
 };
 
+// Add these variables at the top of your file with other global variables
+let currentTop100SortField = 'name';
+let currentTop100SortDirection = 'asc';
+
 // Define sortAndDisplayResults before it's used
 function sortAndDisplayResults(sortBy) {
     if (!currentSearchResults.length) return;
@@ -561,41 +565,69 @@ function updateTop100Display() {
     `).join('');
 }
 
-// Update sortTop100List to use window.currentSort
-function sortTop100List(column) {
-    const sortButton = document.querySelector(`[data-sort="${column}"]`);
-    const allSortButtons = document.querySelectorAll('.sort-button');
-    
-    allSortButtons.forEach(btn => {
-        btn.classList.remove('active');
-        btn.removeAttribute('data-direction');
-    });
-
-    if (window.currentSort.column === column) {
-        window.currentSort.direction = window.currentSort.direction === 'asc' ? 'desc' : 'asc';
+// Add this function to handle the sorting of Top 100 list
+function sortTop100List(field) {
+    // Toggle sort direction if clicking the same field
+    if (field === currentTop100SortField) {
+        currentTop100SortDirection = currentTop100SortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-        window.currentSort.column = column;
-        window.currentSort.direction = 'asc';
+        currentTop100SortField = field;
+        currentTop100SortDirection = 'asc';
     }
 
-    sortButton.classList.add('active');
-    sortButton.setAttribute('data-direction', window.currentSort.direction);
-
+    // Sort the top100List array
     window.top100List.sort((a, b) => {
-        let valueA = a[column];
-        let valueB = b[column];
-
-        if (column === 'population') {
-            valueA = parseInt(valueA.replace(/,/g, '')) || 0;
-            valueB = parseInt(valueB.replace(/,/g, '')) || 0;
+        let valueA, valueB;
+        
+        switch (field) {
+            case 'name':
+                valueA = a.PeopNameInCountry || '';
+                valueB = b.PeopNameInCountry || '';
+                break;
+            case 'country':
+                valueA = a.ROG3 || '';
+                valueB = b.ROG3 || '';
+                break;
+            case 'population':
+                valueA = parseInt(a.Population) || 0;
+                valueB = parseInt(b.Population) || 0;
+                return currentTop100SortDirection === 'asc' ? valueA - valueB : valueB - valueA;
+            case 'religion':
+                valueA = a.PrimaryReligion || '';
+                valueB = b.PrimaryReligion || '';
+                break;
+            default:
+                valueA = '';
+                valueB = '';
         }
 
-        return window.currentSort.direction === 'asc' 
-            ? (valueA > valueB ? 1 : -1)
-            : (valueA < valueB ? 1 : -1);
+        // For string comparisons
+        if (currentTop100SortDirection === 'asc') {
+            return valueA.toString().localeCompare(valueB.toString());
+        } else {
+            return valueB.toString().localeCompare(valueA.toString());
+        }
     });
 
-    updateTop100Display();
+    // Update the display
+    displayTop100List();
+}
+
+// Modify your displayTop100List function to include sort indicators
+function displayTop100List() {
+    const top100Container = document.getElementById('top100-list');
+    if (!top100Container) return;
+
+    // Update sort indicators in column headers
+    document.querySelectorAll('.sort-header').forEach(header => {
+        const field = header.getAttribute('data-sort');
+        const indicator = currentTop100SortField === field 
+            ? (currentTop100SortDirection === 'asc' ? ' ↑' : ' ↓') 
+            : '';
+        header.textContent = header.getAttribute('data-label') + indicator;
+    });
+
+    // Rest of your existing displayTop100List code...
 }
 
 // Make the function globally accessible
