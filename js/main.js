@@ -828,4 +828,76 @@ function addSelectedToTop100() {
                 alert('Error saving to database. Please try again.');
             });
     }
+}
+
+function createSortButtons() {
+    const sortContainer = document.createElement('div');
+    sortContainer.className = 'sort-buttons';
+    sortContainer.innerHTML = `
+        <span class="sort-label">Sort by:</span>
+        <button class="sort-btn" data-sort="distance">Distance</button>
+        <button class="sort-btn" data-sort="type">Type</button>
+        <button class="sort-btn" data-sort="country">Country</button>
+        <button class="sort-btn" data-sort="population">Population</button>
+        <button class="sort-btn" data-sort="religion">Religion</button>
+    `;
+    
+    // Add click handlers for sort buttons
+    sortContainer.querySelectorAll('.sort-btn').forEach(button => {
+        button.addEventListener('click', (e) => {
+            // Remove active class from all buttons
+            sortContainer.querySelectorAll('.sort-btn').forEach(btn => 
+                btn.classList.remove('active'));
+            // Add active class to clicked button
+            button.classList.add('active');
+            
+            const sortBy = button.dataset.sort;
+            sortResults(sortBy);
+        });
+    });
+    
+    return sortContainer;
+}
+
+function displayResults(results) {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '';
+    
+    // Add sort buttons at the top
+    resultsDiv.appendChild(createSortButtons());
+    
+    // Create and add results container
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'results-container';
+    resultsDiv.appendChild(resultsContainer);
+    
+    results.forEach(result => {
+        // ... existing result display code ...
+    });
+}
+
+function sortResults(sortBy) {
+    const resultsContainer = document.querySelector('.results-container');
+    const results = Array.from(resultsContainer.children);
+    
+    results.sort((a, b) => {
+        switch(sortBy) {
+            case 'distance':
+                return parseFloat(a.dataset.distance) - parseFloat(b.dataset.distance);
+            case 'type':
+                return a.dataset.type.localeCompare(b.dataset.type);
+            case 'country':
+                return a.dataset.country.localeCompare(b.dataset.country);
+            case 'population':
+                return parseInt(b.dataset.population) - parseInt(a.dataset.population);
+            case 'religion':
+                return a.dataset.religion.localeCompare(b.dataset.religion);
+            default:
+                return 0;
+        }
+    });
+    
+    // Clear and re-append sorted results
+    resultsContainer.innerHTML = '';
+    results.forEach(result => resultsContainer.appendChild(result));
 } 
