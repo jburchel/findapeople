@@ -20,6 +20,30 @@ window.currentSort = {
 let currentTop100SortField = 'name';
 let currentTop100SortDirection = 'asc';
 
+// Add this function near the top of your js/main.js file, before it's used in the search functions
+function calculateDistance(lat1, lon1, lat2, lon2) {
+    // Convert degrees to radians
+    lat1 = parseFloat(lat1) * Math.PI / 180;
+    lon1 = parseFloat(lon1) * Math.PI / 180;
+    lat2 = parseFloat(lat2) * Math.PI / 180;
+    lon2 = parseFloat(lon2) * Math.PI / 180;
+
+    // Haversine formula
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = lat2 - lat1;
+    const dLon = lon2 - lon1;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1) * Math.cos(lat2) * 
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+
+    // Add some logging to help debug
+    console.log(`Calculating distance between (${lat1 * 180/Math.PI}, ${lon1 * 180/Math.PI}) and (${lat2 * 180/Math.PI}, ${lon2 * 180/Math.PI}): ${distance}km`);
+
+    return distance;
+}
+
 // Define sortAndDisplayResults before it's used
 function sortAndDisplayResults(sortBy) {
     if (!currentSearchResults.length) return;
@@ -295,63 +319,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         
         upgSelect.disabled = false;
-    }
-
-    // Function to calculate distance between two points
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        // Convert coordinates from strings and validate
-        lat1 = parseFloat(lat1);
-        lon1 = parseFloat(lon1);
-        lat2 = parseFloat(lat2);
-        lon2 = parseFloat(lon2);
-
-        // Detailed validation logging
-        if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
-            console.warn('Invalid coordinates detected:', {
-                sourceCoords: { lat: lat1, lon: lon1 },
-                targetCoords: { lat: lat2, lon: lon2 },
-                validation: {
-                    lat1Valid: !isNaN(lat1),
-                    lon1Valid: !isNaN(lon1),
-                    lat2Valid: !isNaN(lat2),
-                    lon2Valid: !isNaN(lon2)
-                }
-            });
-            return Infinity;
-        }
-
-        // Validate coordinate ranges
-        if (Math.abs(lat1) > 90 || Math.abs(lat2) > 90 || Math.abs(lon1) > 180 || Math.abs(lon2) > 180) {
-            console.warn('Coordinates out of valid range:', {
-                sourceCoords: { lat: lat1, lon: lon1 },
-                targetCoords: { lat: lat2, lon: lon2 }
-            });
-            return Infinity;
-        }
-
-        // Convert to radians
-        const lat1Rad = (lat1 * Math.PI) / 180;
-        const lon1Rad = (lon1 * Math.PI) / 180;
-        const lat2Rad = (lat2 * Math.PI) / 180;
-        const lon2Rad = (lon2 * Math.PI) / 180;
-
-        // Haversine formula
-        const dLat = lat2Rad - lat1Rad;
-        const dLon = lon2Rad - lon1Rad;
-        const a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1Rad) * Math.cos(lat2Rad) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        const distance = 6371 * c; // Earth's radius in km * c
-
-        console.log('Distance calculation:', {
-            from: `${lat1.toFixed(6)},${lon1.toFixed(6)}`,
-            to: `${lat2.toFixed(6)},${lon2.toFixed(6)}`,
-            distance: `${distance.toFixed(2)}km`
-        });
-
-        return distance;
     }
 
     // Function to search Joshua Project API
@@ -797,7 +764,7 @@ function displayTop100List() {
     document.querySelectorAll('.sort-header').forEach(header => {
         const field = header.getAttribute('data-sort');
         const indicator = currentTop100SortField === field 
-            ? (currentTop100SortDirection === 'asc' ? ' ↑' : ' ↓') 
+            ? (currentTop100SortDirection === 'asc' ? ' ��' : ' ↓') 
             : '';
         header.textContent = header.getAttribute('data-label') + indicator;
     });
