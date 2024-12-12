@@ -97,121 +97,97 @@ def get_people_group_data(people_group: str, country: str) -> Optional[Dict]:
             'api_key': API_KEY,
             'fields': 'PeopleID3,Latitude,Longitude,Population,PercentEvangelical,PrimaryLanguageName,PrimaryReligion,Description',
             'country': country,
-            'peo_name': people_group,
-            'limit': 25
+            'limit': 100,  # Increased to get more potential matches
+            'min_population': '0'
         }
         
         print(f"\nQuerying API for: {people_group} in {country}")
-        response = requests.get(url, params=params)
         
-        if response.status_code != 200:
-            print(f"API Error: {response.status_code} - {response.text}")
-            return None
-            
+        # First try exact name match
+        params['peo_name'] = people_group
+        response = requests.get(url, params=params)
         data = response.json()
         
-        if not data.get('data'):
-            print(f"No data found for {people_group} in {country}")
-            # Try UUPG data
-            uupg_data = get_coordinates_from_uupg(people_group, country)
-            if uupg_data:
-                return uupg_data
-            # If no UUPG data, try capital coordinates
-            capital_coords = get_capital_coordinates(country)
-            if capital_coords:
-                print(f"Using capital coordinates for {country}")
-                return {
-                    'name': people_group,
-                    'country': country,
-                    'latitude': str(capital_coords['lat']),
-                    'longitude': str(capital_coords['lon']),
-                    'population': '',
-                    'evangelical': '',
-                    'language': '',
-                    'religion': '',
-                    'description': ''
-                }
-            return None
-        
-        matches = data['data']
-        print(f"Found {len(matches)} potential matches")
-        
-        # Filter matches by country first
+        matches = data.get('data', [])
         country_matches = [
             m for m in matches 
             if m.get('Ctry', '').lower() == country.lower()
         ]
         
-        if country_matches:
-            print(f"Found {len(country_matches)} matches in {country}")
-            matches = country_matches
-        else:
-            print(f"Warning: No matches found in {country}")
-            # Try UUPG data before giving up
-            uupg_data = get_coordinates_from_uupg(people_group, country)
-            if uupg_data:
-                return uupg_data
-            return None
-            
-        # Try to find best match by name
+        # Try different name matching strategies
         best_match = None
-        for match in matches:
-            name_in_country = match.get('PeopNameInCountry', '').lower()
-            if name_in_country == people_group.lower():
+        
+        # 1. Try exact match
+        for match in country_matches:
+            if match.get('PeopNameInCountry', '').lower() == people_group.lower():
                 best_match = match
-                print(f"Found exact name match: {match.get('PeopNameInCountry')}")
+                print(f"Found exact match: {match['PeopNameInCountry']}")
                 break
-        
-        # If no exact name match, take first match in correct country
-        if not best_match and matches:
-            best_match = matches[0]
-            print(f"Using first match in country: {best_match.get('PeopNameInCountry')}")
-            
+                
+        # 2. Try contained match (e.g., "Lak" in "Lak, Caucasus")
         if not best_match:
-            print(f"No suitable match found for {people_group}")
-            return None
+            for match in country_matches:
+                if people_group.lower() in match.get('PeopNameInCountry', '').lower():
+                    best_match = match
+                    print(f"Found partial match: {match['PeopNameInCountry']}")
+                    break
+        
+        # 3. Try alternate names if available
+        if not best_match and 'jpaltnames' in params.get('connected_data', ''):
+            for match in country_matches:
+                alt_names = match.get('AltNames', '').lower().split(',')
+                if any(people_group.lower() in alt_name for alt_name in alt_names):
+                    best_match = match
+                    print(f"Found match in alternate names: {match['PeopNameInCountry']}")
+                    break
+        
+        if best_match:
+            lat = best_match.get('Latitude')
+            lon = best_match.get('Longitude')
             
-        # Get coordinates from the best match
-        lat = best_match.get('Latitude')
-        lon = best_match.get('Longitude')
+            if lat and lon:
+                try:
+                    lat_float = float(lat)
+                    lon_float = float(lon)
+                    if -90 <= lat_float <= 90 and -180 <= lon_float <= 180:
+                        print(f"Using API coordinates: {lat}, {lon}")
+                        return {
+                            'name': people_group,
+                            'country': country,
+                            'latitude': str(lat_float),
+                            'longitude': str(lon_float),
+                            'population': str(best_match.get('Population', '')),
+                            'evangelical': str(best_match.get('PercentEvangelical', '')),
+                            'language': best_match.get('PrimaryLanguageName', ''),
+                            'religion': best_match.get('PrimaryReligion', ''),
+                            'description': best_match.get('Description', '')
+                        }
+                except (ValueError, TypeError):
+                    print(f"Invalid coordinates in API data: {lat}, {lon}")
         
-        print(f"Raw coordinates from API: lat={lat}, lon={lon}")
-        
-        # If coordinates are missing, try to use country capital
-        if not lat or not lon:
-            capital_coords = get_capital_coordinates(country)
-            if capital_coords:
-                lat = capital_coords['lat']
-                lon = capital_coords['lon']
-                print(f"Using capital coordinates: {lat}, {lon}")
-            else:
-                print(f"Warning: No capital coordinates found for {country}")
-                return None
+        # If no API match, try UUPG data
+        print("No valid API match found, trying UUPG data...")
+        uupg_data = get_coordinates_from_uupg(people_group, country)
+        if uupg_data:
+            return uupg_data
             
-        try:
-            lat_float = float(lat)
-            lon_float = float(lon)
-            if not (-90 <= lat_float <= 90 and -180 <= lon_float <= 180):
-                print(f"Warning: Invalid coordinates for {people_group}: {lat}, {lon}")
-                return None
-        except (ValueError, TypeError):
-            print(f"Warning: Invalid coordinate format for {people_group}: {lat}, {lon}")
-            return None
-
-        result = {
-            'name': people_group,
-            'country': country,
-            'latitude': str(lat_float),
-            'longitude': str(lon_float),
-            'population': str(best_match.get('Population', '')),
-            'evangelical': str(best_match.get('PercentEvangelical', '')),
-            'language': best_match.get('PrimaryLanguageName', ''),
-            'religion': best_match.get('PrimaryReligion', ''),
-            'description': best_match.get('Description', '')
-        }
-        
-        print(f"Using coordinates for {people_group}: {result['latitude']}, {result['longitude']}")
-        return result
+        # Last resort: capital coordinates
+        print("No coordinates found in API or UUPG data, using capital coordinates...")
+        capital_coords = get_capital_coordinates(country)
+        if capital_coords:
+            return {
+                'name': people_group,
+                'country': country,
+                'latitude': str(capital_coords['lat']),
+                'longitude': str(capital_coords['lon']),
+                'population': '',
+                'evangelical': '',
+                'language': '',
+                'religion': '',
+                'description': ''
+            }
+            
+        return None
         
     except Exception as e:
         print(f"Error getting data for {people_group} in {country}: {str(e)}")
@@ -235,28 +211,49 @@ def process_data():
             
             print(f"\nProcessing [{index + 1}/{len(valid_records)}]: {name} in {country}")
             
+            # Try to get data from Joshua Project API first
             jp_data = get_people_group_data(name, country)
             time.sleep(DELAY_BETWEEN_REQUESTS)
             
-            if jp_data and jp_data['latitude'] and jp_data['longitude']:
+            if jp_data:
                 print(f"Adding record with coordinates: {jp_data['latitude']}, {jp_data['longitude']}")
                 updated_records.append(jp_data)
                 success_count += 1
                 print("✓ Successfully retrieved data")
             else:
-                print("✗ Failed to get valid data")
+                # If no data found, use capital coordinates as fallback
+                capital_coords = get_capital_coordinates(country)
+                if capital_coords:
+                    fallback_data = {
+                        'name': name,
+                        'country': country,
+                        'latitude': str(capital_coords['lat']),
+                        'longitude': str(capital_coords['lon']),
+                        'population': record.get('population', ''),
+                        'evangelical': record.get('evangelical', ''),
+                        'language': record.get('language', ''),
+                        'religion': record.get('religion', ''),
+                        'description': record.get('description', '')
+                    }
+                    print(f"Using capital coordinates for {name}: {capital_coords['lat']}, {capital_coords['lon']}")
+                    updated_records.append(fallback_data)
+                    print("✓ Added with capital coordinates")
+                else:
+                    print(f"✗ No coordinates available for {name} in {country}")
         
         if updated_records:
             updated_df = pd.DataFrame(updated_records)
             
             print("\nFinal Data Validation:")
             print(f"Total records processed: {len(valid_records)}")
-            print(f"Successfully updated records: {success_count}")
-            print(f"Records with valid coordinates: {len(updated_records)}")
+            print(f"Successfully updated records: {len(updated_records)}")
+            print(f"Records with API data: {success_count}")
+            print(f"Records with fallback coordinates: {len(updated_records) - success_count}")
             
-            print("\nSample of coordinates (first 5 records):")
-            for i, record in enumerate(updated_records[:5]):
-                print(f"{record['name']}: {record['latitude']}, {record['longitude']}")
+            # Show coordinate distribution
+            coord_df = pd.DataFrame(updated_records)[['latitude', 'longitude']].drop_duplicates()
+            print("\nUnique coordinate pairs:")
+            print(coord_df)
             
             updated_df.to_csv(OUTPUT_FILE, index=False)
             print(f"\nProcessing complete. Results written to {OUTPUT_FILE}")
