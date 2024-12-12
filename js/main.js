@@ -447,10 +447,11 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Update the searchUUPG function with better coordinate handling
+    // Update the searchUUPG function to use the filtered data file
     async function searchUUPG(lat, lng, radius) {
         try {
-            const response = await fetch('data/uupg_data.csv');
+            // Change the file reference to use updated_uupg.csv
+            const response = await fetch('data/updated_uupg.csv');
             const csvText = await response.text();
             const rows = csvText.split('\n').map(row => row.split(',').map(cell => cell.trim()));
             const headers = rows[0];
@@ -465,34 +466,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const countryIndex = headers.indexOf('country');
             const popIndex = headers.indexOf('population');
             const religionIndex = headers.indexOf('religion');
-            const engagementIndex = headers.indexOf('Evangelical Engagement');
+            
+            // Remove engagement check since file is pre-filtered
+            // const engagementIndex = headers.indexOf('Evangelical Engagement');
 
-            // Validate required columns exist
-            if (latIndex === -1 || lngIndex === -1) {
-                console.error('Missing required coordinate columns:', {
-                    foundColumns: headers,
-                    latIndex,
-                    lngIndex
-                });
-                return [];
-            }
-
-            console.log('Starting UUPG search with parameters:', {
-                searchCoords: { lat, lng },
-                radius,
-                totalRows: rows.length - 1
-            });
-
+            // Rest of the function remains the same, but remove engagement filtering
             const filteredResults = rows.slice(1) // Skip header row
                 .filter(row => {
-                    // First filter: Check if unengaged
-                    const engagement = row[engagementIndex]?.toLowerCase();
-                    const isUnengaged = engagement === 'unengaged';
-                    
-                    if (!isUnengaged) {
-                        return false;
-                    }
-
                     // Clean and validate coordinates
                     const rawLat = row[latIndex]?.replace(/[^\d.-]/g, '');
                     const rawLng = row[lngIndex]?.replace(/[^\d.-]/g, '');
