@@ -580,23 +580,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (searchType === 'uupg' || searchType === 'both') {
                 const uupgResults = uupgData.filter(group => {
-                    if (group.Latitude && group.Longitude) {
-                        const distance = calculateDistance(
-                            parseFloat(selectedUPG.lat),
-                            parseFloat(selectedUPG.lng),
-                            parseFloat(group.Latitude),
-                            parseFloat(group.Longitude)
-                        );
-                        group.distance = distance;
-                        return distance <= radius;
+                    // Validate coordinates are numeric and within valid ranges
+                    const lat = parseFloat(group.Latitude);
+                    const lng = parseFloat(group.Longitude);
+                    if (isNaN(lat) || isNaN(lng) || 
+                        lat < -90 || lat > 90 || 
+                        lng < -180 || lng > 180) {
+                        return false;
                     }
-                    return false;
+
+                    const distance = calculateDistance(
+                        parseFloat(selectedUPG.lat),
+                        parseFloat(selectedUPG.lng),
+                        lat,
+                        lng
+                    );
+                    group.distance = distance;
+                    return distance <= radius;
                 });
+
                 results.push(...uupgResults.map(r => ({
                     name: r.PeopleName,
-                    country: r.CountryName,
+                    country: r.Country,
                     population: r.Population,
-                    religion: r.PrimaryReligion,
+                    religion: r.Religion,
                     distance: Math.round(r.distance),
                     type: 'UUPG'
                 })));
