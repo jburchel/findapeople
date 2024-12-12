@@ -77,103 +77,66 @@ function sortAndDisplayResults(sortBy) {
 window.sortAndDisplayResults = sortAndDisplayResults;
 
 // Define displayResults before it's used
-function displayResults(results, saveResults = true) {
-    if (saveResults) {
+function displayResults(results, saveAsCurrentResults = true) {
+    const resultsDiv = document.getElementById('searchResults');
+    resultsDiv.innerHTML = '';
+    
+    // Add sort buttons at the top
+    resultsDiv.appendChild(createSortButtons());
+    
+    // Create and add results container
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'results-container';
+    resultsDiv.appendChild(resultsContainer);
+
+    if (saveAsCurrentResults) {
         currentSearchResults = results;
     }
 
-    const resultsDiv = document.getElementById('results');
-    if (!resultsDiv) return;
-    
-    resultsDiv.style.display = 'block';
+    results.forEach(result => {
+        const card = document.createElement('div');
+        card.className = 'result-card';
+        card.dataset.distance = result.distance;
+        card.dataset.type = result.type || '';
+        card.dataset.country = result.Ctry || '';
+        card.dataset.population = result.Population || '0';
+        card.dataset.religion = result.PrimaryReligion || '';
 
-    if (results.length === 0) {
-        resultsDiv.innerHTML = '<p>No people groups found within the specified radius.</p>';
-        return;
-    }
-
-    // Get current sort selection if it exists
-    const currentSort = document.getElementById('sort-results')?.value || 'distance';
-
-    // Create the HTML
-    const html = `
-        <h3>Found ${results.length} People Groups:</h3>
-        <div class="sort-dropdown-container">
-            <label for="sort-results">Sort By:</label>
-            <select id="sort-results">
-                <option value="distance" ${currentSort === 'distance' ? 'selected' : ''}>Distance</option>
-                <option value="type" ${currentSort === 'type' ? 'selected' : ''}>Type</option>
-                <option value="country" ${currentSort === 'country' ? 'selected' : ''}>Country</option>
-                <option value="population" ${currentSort === 'population' ? 'selected' : ''}>Population</option>
-                <option value="religion" ${currentSort === 'religion' ? 'selected' : ''}>Religion</option>
-            </select>
-        </div>
-        <p class="results-help">Select UPGs to add them to your Top 100 list</p>
-        <div class="results-grid">
-            ${results.map(group => {
-                // Ensure all values exist to prevent undefined errors
-                const groupData = {
-                    name: group.name || '',
-                    type: group.type || 'Unknown',
-                    country: group.country || 'Unknown',
-                    population: group.population || 'Unknown',
-                    religion: group.religion || 'Unknown',
-                    distance: Math.round(group.distance || 0)
-                };
-
-                return `
-                    <div class="result-card ${window.selectedUPGs.has(groupData.name) ? 'selected' : ''}">
-                        <input type="checkbox" 
-                               class="select-upg" 
-                               value="${groupData.name}"
-                               ${window.selectedUPGs.has(groupData.name) ? 'checked' : ''}
-                               ${window.top100List.some(item => item.name === groupData.name) ? 'disabled' : ''}>
-                        <h4>${groupData.name}</h4>
-                        <p><strong>Type:</strong> ${groupData.type}</p>
-                        <p><strong>Country:</strong> ${groupData.country}</p>
-                        <p><strong>Population:</strong> ${groupData.population}</p>
-                        <p><strong>Religion:</strong> ${groupData.religion}</p>
-                        <p><strong>Distance:</strong> ${groupData.distance} km</p>
-                        ${window.top100List.some(item => item.name === groupData.name) ? 
-                            '<p class="already-added">Already in Top 100</p>' : ''}
-                    </div>
-                `;
-            }).join('')}
-        </div>
-        <button id="add-selected" class="add-selected-button">Add Selected to Top 100</button>
-    `;
-
-    // Update the DOM
-    resultsDiv.innerHTML = html;
-
-    // Add event listeners for checkboxes
-    document.querySelectorAll('.select-upg').forEach(checkbox => {
-        checkbox.addEventListener('change', (e) => {
-            const card = e.target.closest('.result-card');
-            if (e.target.checked) {
-                window.selectedUPGs.add(e.target.value);
-                card.classList.add('selected');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'upg-checkbox';
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                selectedUPGs.add(result);
             } else {
-                window.selectedUPGs.delete(e.target.value);
-                card.classList.remove('selected');
+                selectedUPGs.delete(result);
             }
         });
+
+        card.innerHTML = `
+            ${checkbox.outerHTML}
+            <h4>${result.PeopNameInCountry}</h4>
+            <p><strong>ID:</strong> ${result.PeopleID3}</p>
+            <p><strong>Type:</strong> ${result.type || 'Unknown'}</p>
+            <p><strong>Country:</strong> ${result.Ctry}</p>
+            <p><strong>Population:</strong> ${result.Population?.toLocaleString() || 'Unknown'}</p>
+            <p><strong>Religion:</strong> ${result.PrimaryReligion || 'Unknown'}</p>
+            <p><strong>Distance:</strong> ${Math.round(result.distance)}km</p>
+            <p><strong>% Evangelical:</strong> ${result.PercentEvangelical || '0'}%</p>
+            <p><strong>% Adherent:</strong> ${result.PercentAdherents || '0'}%</p>
+        `;
+
+        resultsContainer.appendChild(card);
     });
 
-    // Add event listener for Add Selected button
-    const addSelectedButton = document.getElementById('add-selected');
-    if (addSelectedButton) {
-        addSelectedButton.addEventListener('click', addSelectedToTop100);
-    }
-
-    // Reattach sort event listener
-    const sortResultsSelect = document.getElementById('sort-results');
-    if (sortResultsSelect) {
-        sortResultsSelect.value = currentSort; // Ensure the correct option is selected
-        sortResultsSelect.addEventListener('change', function(e) {
-            console.log('Sort dropdown changed:', e.target.value);
-            sortAndDisplayResults(e.target.value);
-        });
+    if (results.length === 0) {
+        resultsDiv.innerHTML += '<p>No results found</p>';
+    } else {
+        const addButton = document.createElement('button');
+        addButton.textContent = 'Add Selected to Top 100';
+        addButton.className = 'add-to-top100-btn';
+        addButton.onclick = addSelectedToTop100;
+        resultsDiv.appendChild(addButton);
     }
 }
 
@@ -764,7 +727,7 @@ function displayTop100List() {
     document.querySelectorAll('.sort-header').forEach(header => {
         const field = header.getAttribute('data-sort');
         const indicator = currentTop100SortField === field 
-            ? (currentTop100SortDirection === 'asc' ? ' ��' : ' ↓') 
+            ? (currentTop100SortDirection === 'asc' ? ' ' : ' ↓') 
             : '';
         header.textContent = header.getAttribute('data-label') + indicator;
     });
@@ -857,23 +820,6 @@ function createSortButtons() {
     });
     
     return sortContainer;
-}
-
-function displayResults(results) {
-    const resultsDiv = document.getElementById('searchResults');
-    resultsDiv.innerHTML = '';
-    
-    // Add sort buttons at the top
-    resultsDiv.appendChild(createSortButtons());
-    
-    // Create and add results container
-    const resultsContainer = document.createElement('div');
-    resultsContainer.className = 'results-container';
-    resultsDiv.appendChild(resultsContainer);
-    
-    results.forEach(result => {
-        // ... existing result display code ...
-    });
 }
 
 function sortResults(sortBy) {
