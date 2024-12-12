@@ -1,12 +1,12 @@
 ﻿,name,country,latitude,longitude,population,evangelical,language,religion,description,,
 1,Abdul,,,,,,,Muslim,,Urdu,2022
-2,Adjaris (Caucasus),Georgia,,,,,,Muslim,,Caucasus / Georgia,2019
+2,Georgian ,Georgia,,,,,,Muslim,,Caucasus / Georgia,2019
 3,Afghans ,,,,,,,Muslim,,Persian,2020
 4,Ahar,India,,,,,,Hindu,,Ganges,
 5,Ahmadi,,,,,,,Muslim,,Urdu,2Q / 2023
 6,Alavi (Shaikh),,,,,,,Muslim,,Turkish,4Q / 2022
 7,Albanian,Albania,,,,,,Muslim,,Project / Albania,2017
-8,Algerians (Arab),Algeria,,,,,,Muslim,,Magreb / Algeria,
+8,Arab,Algeria,,,,,,Muslim,,Magreb / Algeria,
 9,Amazigh,Morocco,,,,,,Muslim,,Magreb / Morocco,2021
 10,Ansari,,,,,,,Hindu,,,
 11,Ansari,,,,,,,Muslim,,,
@@ -17,8 +17,8 @@
 16,Ari,,,,,,,Hindu,,,
 17,Assamese,,,,,,,Hindu,,,
 18,Avar (Dagestani),Russia,,,,,,Muslim,,Caucasus / Russia,2019
-,Azeris (Caucasus),Georgia,,,,,,Muslim,,Georgia,
-19,Azeris (Caucasus),Azerbaijan,,,,,,Muslim,,Azerbaijani / Azerbaijan; Georgia (2019),2016
+,Azerbaijani,Georgia,,,,,,Muslim,,Georgia,
+19,Azerbaijani,Azerbaijan,,,,,,Muslim,,Azerbaijani / Azerbaijan; Georgia (2019),2016
 20,Badhai,,,,,,,Hindu,,,
 21,Bagdi,,,,,,,Hindu,,Ganges,3Q / 2022
 22,Bairagi,,,,,,,Hindu,,,
@@ -35,8 +35,8 @@
 33,Batwal (Barwala),,,,,,,Hindu,,Urdu,1Q / 2023
 34,Beldar (Nunia),,,,,,,Hindu,,,
 35,Bengali,,,,,,,Hindu,,,
-36,Berabish Bedouin (Bidan),Mauratiania,,,,,,Muslim,,Magreb / Mauritania,4Q / 2022
-37,Berbers (North Africa),Morocco,,,,,,Muslim,,Magreb / Morocco,2019
+36,Berabish,Mauratiania,,,,,,Muslim,,Magreb / Mauritania,4Q / 2022
+37,Imazighen,Morocco,,,,,,Muslim,,Magreb / Morocco,2019
 38,Bharati,,,,,,,Hindu,,,
 39,Bhil,,,,,,,Hindu,,,
 40,Bhuiya,,,,,,,Hindu,,,
@@ -52,12 +52,12 @@
 50,Brahman,,,,,,,Hindu,,,
 51,Brahmin,,,,,,,Hindu,,,
 52,Brahmin Maithili,Nepal,,,,,,Hindu,,Himalayan / Nepal,3Q / 2023
-53,Budug,Azerbaijan,,,,,,Muslim,,Azerbaijani,3Q / 2022
+53,Budukh,Azerbaijan,,,,,,Muslim,,Azerbaijani,3Q / 2022
 54,Bugis,Indonesia,,,,,,Muslim,,Indonesia,4Q / 2022
 55,Buol,Indonesia,,,,,,Hindu,,Indonesia,2Q / 2022
 56,Buthanese-Nepali,,,,,,,Buddhist,,,
 57,Chamar (Raidas) (Jatav) (Das),,,,,,,Hindu,,,
-58,Chechenians (Caucasus),Georgia,,,,,,Muslim,,Caucasus / Georgia,2017
+58,Kist,Georgia,,,,,,Muslim,,Caucasus / Georgia,2017
 59,Chepang,Nepal,,,,,,Hindu,,Himalayan / Nepal,3Q / 2023
 60,Chhantyal,,,,,,,Hindu,,Himalayan,3Q / 2022
 61,Chhetri,,,,,,,Hindu,,,
@@ -97,18 +97,18 @@
 95,Halwai,,,,,,,Hindu,,,
 96,Han-Chinese,China,,,,,,Atheist,,H2O,2020
 97,Harratine,,,,,,,Muslim,,,
-98,Hartani (Mauritania),Mauratania,,,,,,Muslim,,Magreb / Mauritania,4Q / 2022
+98,Hartani ,Mauratania,,,,,,Muslim,,Magreb / Mauritania,4Q / 2022
 99,Imragen,,,,,,,Muslim,,Magreb,2Q / 2022
-100,Inghiloids (Caucasus),Russia,,,,,,Muslim,,Caucasus / Russia,2017
+100,Ingush    ,Russia,,,,,,Muslim,,Caucasus / Russia,2017
 101,Ingush (Caucasus),,,,,,,Muslim,,,
-102,Iranians (Persian),Iran,,,,,,Muslim,,Persian / Iran; Germany,2010
+102,Persian,Iran,,,,,,Muslim,,Persian / Iran; Germany,2010
 103,Jamual,,,,,,,Hindu,,,
 104,Japanese,,,,,,,Buddhist,,,
 105,Jat (muslim),,,,,,,Muslim,,,
 106,Jat (Sikh),,,,,,,Hindu,,,
 107,Jordanians (Arab),,,,,,,Muslim,,,
 108,Joshi,,,,,,,Hindu,,,
-109,Kabardians (Balkariya - Caucasus),Russia,,,,,,Muslim,,Caucasus / Russia,2018
+109,Kabardian,Russia,,,,,,Muslim,,Caucasus / Russia,2018
 110,Kahar,,,,,,,Hindu,,,
 111,Kahar Kamkar,,,,,,,Hindu,,,
 112,Kaili Ledo (Central Sulawesi),,,,,,,Muslim/Animist,,Southeast Asia,
@@ -142,9 +142,9 @@
 140,Lady,,,,,,,Hindu,,,
 141,Lak ,Azerbaijan,,,,,,Muslim,,Azerbaijani,3Q / 2022
 142,Lama,,,,,,,Buddhist,,Himalayan,2Q / 2023
-,Lezgin (Azerbaijan/Caucasus),Russia,,,,,,Muslim,,Caucasus / Azerbaijan; Russia (2019),
-143,Lezgin (Azerbaijan/Caucasus),Azerbaijan,,,,,,Muslim,,Caucasus / Azerbaijan; Russia (2019),2018
-144,Lodha (Lodhi) (Lodh),India,,,,,,Hindu,,Ganges / India,4Q / 2024
+,Lezgin,Russia,,,,,,Muslim,,Caucasus / Azerbaijan; Russia (2019),
+143,Lezgi,Azerbaijan,,,,,,Muslim,,Caucasus / Azerbaijan; Russia (2019),2018
+144,Lodha (Hindu traditions),India,,,,,,Hindu,,Ganges / India,4Q / 2024
 145,Lohar,,,,,,,Hindu,,,
 146,Lunia (Nonia),,,,,,,Hindu,,,
 147,Magar,,,,,,,Hindu,,,
@@ -158,11 +158,11 @@
 155,Mayastha,,,,,,,Hindu,,,
 156,Mestar,,,,,,,Hindu,,,
 157,Miao,,,,,,,Animist,,,
-158,Mirasi (Sheikh),India,,,,,,Muslim,,Urdu / India,3Q / 2023
+158,Mirasi,India,,,,,,Muslim,,Urdu / India,3Q / 2023
 159,Mochi,,,,,,,Hindu,,,
 160,Monia,,,,,,,Hindu,,,
-161,Moors - Bithan (North Africa),Mauratania,,,,,,Muslim,,Magreb / Mauritania,2020
-162,Mugal (Mugali),Nepal,,,,,,Hindu,,Himalayan / Nepal,3Q / 2023
+161,Moor,Mauratania,,,,,,Muslim,,Magreb / Mauritania,2020
+162,Mugal,Nepal,,,,,,Hindu,,Himalayan / Nepal,3Q / 2023
 163,Mugate-Gypsy,,,,,,,Muslim,,,
 164,Muna,,,,,,,Muslim,,Indonesia,4Q / 2022
 165,Munda,Indonesia,,,,,,Hindu,,,
@@ -206,7 +206,7 @@
 203,Sasak,,,,,,,Muslim,,,
 204,Seth,,,,,,,Hindu,,,
 205,Shah,,,,,,,Hindu,,,
-206,Shahseven,Azerbaijan,,,,,,Muslim,,Azerbaijani,3Q / 2022
+206,Ilsavan,Azerbaijan,,,,,,Muslim,,Azerbaijani,3Q / 2022
 207,Shaikh,,,,,,,Muslim,,,
 208,Shakhsaz (India),,,,,,,Muslim,,,
 209,Shankhwar,,,,,,,Hindu,,,
@@ -219,7 +219,7 @@
 216,Somali,,,,,,,Muslim,,Sahel,2Q / 2022
 217,Somokey,,,,,,,Muslim,,,
 218,Sonar,,,,,,,Hindu,,,
-219,Sonia (Adivasi),India,,,,,,Hindu,,Himalayan / India,3Q / 2023
+219,Soria,India,,,,,,Hindu,,Himalayan / India,3Q / 2023
 220,Sonuki,,,,,,,Muslim,,,
 221,Soumraye,,,,,,,Muslim,,,
 222,Subba,,,,,,,Hindu,,Himalayan,4Q / 2022
@@ -243,10 +243,10 @@
 240,Tuareg (Tahaggart),,,,,,,Muslim,,,
 241,Tudu,,,,,,,Hindu,,Himalayan,4Q / 2022
 242,Tujia,,,,,,,Animist,,,
-243,Tunisians (Arab),Tunisia,,,,,,Muslim,,Magreb / Tunisia,2020
+243,"Arab, Tunisian",Tunisia,,,,,,Muslim,,Magreb / Tunisia,2020
 244,Turaiha (Turha),,,,,,,Hindu,,Ganges,1Q / 2023
-245,Turcomens (Central Asian),Turkmenistan,,,,,,Muslim,,Central Asia / Turkmenistan,2019
-246,Turks,Turkey,,,,,,Muslim,,Turkish / Turkey; Netherlands (2014); Cyprus (2016); Germany (2019),1Q 2010
+245,Turkmen,Turkmenistan,,,,,,Muslim,,Central Asia / Turkmenistan,2019
+246,Turk,Turkey,,,,,,Muslim,,Turkish / Turkey; Netherlands (2014); Cyprus (2016); Germany (2019),1Q 2010
 247,Turku (Arab),,,,,,,Muslim,,,
 248,Uighurs (Central Asian),,,,,,,Muslim,,,
 249,Uzbeks (Central Asian),,,,,,,Muslim,,Central Asia,2009
