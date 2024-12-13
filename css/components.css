@@ -52,6 +52,19 @@
     align-items: center;
 }
 
+/* Header and Logo */
+.header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.logo {
+    max-width: 200px;
+    height: auto;
+}
+
 /* Button */
 button {
     background-color: var(--secondary-color);
