@@ -1,8 +1,19 @@
+.proximity-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.proximity-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
 .distance-unit {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    margin-left: 10px;
 }
 
 .distance-unit input[type="radio"] {

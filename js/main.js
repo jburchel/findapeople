@@ -80,27 +80,25 @@ window.sortAndDisplayResults = sortAndDisplayResults;
 function displayResults(results, saveAsCurrentResults = true) {
     const resultsDiv = document.getElementById('searchResults');
     resultsDiv.innerHTML = '';
-    
-    // Add sort buttons at the top
-    resultsDiv.appendChild(createSortButtons());
-    
-    // Create and add results container
-    const resultsContainer = document.createElement('div');
-    resultsContainer.className = 'results-container';
-    resultsDiv.appendChild(resultsContainer);
 
     if (saveAsCurrentResults) {
         currentSearchResults = results;
     }
 
     if (!results || results.length === 0) {
-        resultsDiv.innerHTML += '<p>No results found</p>';
+        resultsDiv.innerHTML = '<p>No results found</p>';
         return;
     }
 
+    // Create results container
+    const resultsContainer = document.createElement('div');
+    resultsContainer.className = 'results-container';
+    resultsDiv.appendChild(resultsContainer);
+
     results.forEach(result => {
-        const card = document.createElement('div');
-        card.className = 'result-card';
+        // Create card for each result
+        const resultCard = document.createElement('div');
+        resultCard.className = 'result-card';
         
         // Get the current distance unit
         const distanceUnitElement = document.querySelector('input[name="distanceUnit"]:checked');
@@ -109,7 +107,7 @@ function displayResults(results, saveAsCurrentResults = true) {
         const displayDistance = result.displayDistance || Math.round(result.distance);
         const displayUnit = result.displayUnit || selectedUnit;
 
-        card.innerHTML = `
+        resultCard.innerHTML = `
             <input type="checkbox" class="upg-checkbox">
             <h4>${result.PeopNameInCountry || result.name}</h4>
             <p><strong>ID:</strong> ${result.PeopleID3 || 'N/A'}</p>
@@ -123,7 +121,7 @@ function displayResults(results, saveAsCurrentResults = true) {
         `;
 
         // Add checkbox event listener
-        const checkbox = card.querySelector('.upg-checkbox');
+        const checkbox = resultCard.querySelector('.upg-checkbox');
         checkbox.addEventListener('change', () => {
             if (checkbox.checked) {
                 selectedUPGs.add(result);
@@ -132,7 +130,7 @@ function displayResults(results, saveAsCurrentResults = true) {
             }
         });
 
-        resultsContainer.appendChild(card);
+        resultsContainer.appendChild(resultCard);
     });
 
     // Add the "Add Selected to Top 100" button
