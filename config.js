@@ -9,7 +9,7 @@ const config = {
     },
     
     // Joshua Project API configuration
-    joshuaProjectApiKey: process.env.JOSHUA_PROJECT_API_KEY || '',
+    joshuaProjectApiKey: '080e14ad747e',
     
     // API endpoints
     apiEndpoints: {

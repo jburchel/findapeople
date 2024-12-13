@@ -22,22 +22,28 @@ async function loadUUPGData() {
 // Function to fetch FPG data from Joshua Project API
 async function fetchFPGData(lat, lng, radius) {
     try {
-        const baseUrl = window.appConfig.apiEndpoints.joshuaProject + '/people_groups.json';
+        const baseUrl = 'https://api.joshuaproject.net/v1/people_groups.json';
         const params = new URLSearchParams({
             api_key: window.appConfig.joshuaProjectApiKey,
             latitude: lat,
             longitude: lng,
             radius: radius,
-            frontier_people_group: true,
+            frontier_people_group: 1, // Changed to 1 for true
             select: 'PeopleID,PeopleName,Latitude,Longitude,Population,PrimaryReligion,PrimaryLanguageName,CountryName'
         });
 
+        console.log('Fetching FPGs with params:', Object.fromEntries(params));
         const response = await fetch(`${baseUrl}?${params}`);
+        
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('API Error:', errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('FPG API Response:', data);
+        
         return data.map(fpg => ({
             name: fpg.PeopleName,
             country: fpg.CountryName,
