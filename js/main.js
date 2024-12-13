@@ -121,7 +121,7 @@ function displayResults(results, saveAsCurrentResults = true) {
             <p><strong>Country:</strong> ${result.Ctry}</p>
             <p><strong>Population:</strong> ${result.Population?.toLocaleString() || 'Unknown'}</p>
             <p><strong>Religion:</strong> ${result.PrimaryReligion || 'Unknown'}</p>
-            <p><strong>Distance:</strong> ${Math.round(result.distance)}km</p>
+            <p><strong>Distance:</strong> ${result.displayDistance}${result.displayUnit === 'miles' ? 'mi' : 'km'}</p>
             <p><strong>% Evangelical:</strong> ${result.PercentEvangelical || '0'}%</p>
             <p><strong>% Adherent:</strong> ${result.PercentAdherents || '0'}%</p>
         `;
@@ -633,20 +633,26 @@ function addToTop100(upg) {
 }
 
 // Remove UPG from Top 100 list
-function removeFromTop100(upgName) {
-    console.log('Removing UPG:', upgName);
-    window.top100List = window.top100List.filter(item => item.name !== upgName);
-    
-    // Save to Firebase
-    window.top100Ref.set(Object.assign({}, window.top100List))
-        .then(() => {
-            console.log('Successfully removed from Firebase');
-            updateTop100Display();
-        })
-        .catch(error => {
-            console.error('Error saving to Firebase:', error);
-            alert('Error removing from database. Please try again.');
-        });
+function removeFromTop100(peopleGroup) {
+    // Show confirmation dialog
+    if (confirm(`Are you sure you want to remove ${peopleGroup.name} from the Top 100 list?`)) {
+        // Find the index of the people group to remove
+        const index = top100List.findIndex(pg => pg.name === peopleGroup.name);
+        if (index > -1) {
+            top100List.splice(index, 1);
+            
+            // Save to Firebase
+            top100Ref.set(Object.assign({}, top100List))
+                .then(() => {
+                    console.log('Successfully removed from Firebase');
+                    updateTop100Display();
+                })
+                .catch(error => {
+                    console.error('Error saving to Firebase:', error);
+                    alert('Error removing from database. Please try again.');
+                });
+        }
+    }
 }
 
 // Update the Top 100 display
@@ -846,4 +852,49 @@ function sortResults(sortBy) {
     // Clear and re-append sorted results
     resultsContainer.innerHTML = '';
     results.forEach(result => resultsContainer.appendChild(result));
+}
+
+function convertToKilometers(distance, unit) {
+    return unit === 'miles' ? distance * 1.60934 : distance;
+}
+
+function convertFromKilometers(distance, unit) {
+    return unit === 'miles' ? distance / 1.60934 : distance;
+}
+
+// Modify your search function to use the selected unit
+async function performSearch() {
+    const selectedUnit = document.querySelector('input[name="distanceUnit"]:checked').value;
+    const proximityInput = document.getElementById('proximity');
+    const proximityKm = convertToKilometers(parseFloat(proximityInput.value), selectedUnit);
+    
+    // ... rest of your search logic ...
+    
+    // When displaying results, convert distances back to selected unit
+    results.forEach(result => {
+        result.displayDistance = Math.round(convertFromKilometers(result.distance, selectedUnit));
+        result.displayUnit = selectedUnit;
+    });
+    
+    displayResults(results);
+}
+
+// Update your displayResults function to use the converted distance
+function displayResults(results) {
+    // ... existing code ...
+    
+    card.innerHTML = `
+        ${checkbox.outerHTML}
+        <h4>${result.PeopNameInCountry}</h4>
+        <p><strong>ID:</strong> ${result.PeopleID3}</p>
+        <p><strong>Type:</strong> ${result.type || 'Unknown'}</p>
+        <p><strong>Country:</strong> ${result.Ctry}</p>
+        <p><strong>Population:</strong> ${result.Population?.toLocaleString() || 'Unknown'}</p>
+        <p><strong>Religion:</strong> ${result.PrimaryReligion || 'Unknown'}</p>
+        <p><strong>Distance:</strong> ${result.displayDistance}${result.displayUnit === 'miles' ? 'mi' : 'km'}</p>
+        <p><strong>% Evangelical:</strong> ${result.PercentEvangelical || '0'}%</p>
+        <p><strong>% Adherent:</strong> ${result.PercentAdherents || '0'}%</p>
+    `;
+    
+    // ... rest of your code ...
 } 
