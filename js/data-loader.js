@@ -4,12 +4,13 @@ let upgsData = [];
 // Function to load and parse CSV data
 async function loadCSVData() {
     try {
-        const response = await fetch('../data/existing_upgs_updated.csv');
+        const response = await fetch('./data/existing_upgs_updated.csv');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const csvText = await response.text();
         upgsData = parseCSV(csvText);
+        console.log('Loaded UPGs data:', upgsData.length, 'entries');
         return upgsData;
     } catch (error) {
         console.error('Error loading CSV data:', error);
