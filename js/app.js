@@ -5,27 +5,22 @@ let uupgData = [];
 // Function to load UUPG data
 async function loadUUPGData() {
     try {
-        const response = await fetch('./data/updated_uupg.csv');
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
+        const response = await fetch('data/updated_uupg.csv');
         const csvText = await response.text();
-        uupgData = parseCSV(csvText);
+        uupgData = Papa.parse(csvText, { header: true }).data;
         console.log('Loaded UUPG data:', uupgData.length, 'entries');
-        return uupgData;
     } catch (error) {
         console.error('Error loading UUPG data:', error);
-        return [];
     }
 }
 
 // Load the existing UPG data
 async function loadExistingUPGData() {
     try {
-        const response = await fetch('data/existing_upgs_updated.csv');
+        const response = await fetch('data/CG-Existing-UPG-Q1-2024.csv');
         const csvText = await response.text();
         existingUPGData = Papa.parse(csvText, { header: true }).data;
-        console.log('Loaded existing UPG data:', existingUPGData);
+        console.log('Loaded existing UPG data:', existingUPGData.length, 'entries');
         populateCountryDropdown();
     } catch (error) {
         console.error('Error loading existing UPG data:', error);
@@ -35,33 +30,52 @@ async function loadExistingUPGData() {
 // Populate country dropdown from existing UPG data
 function populateCountryDropdown() {
     const countrySelect = document.getElementById('country-select');
-    const countries = [...new Set(existingUPGData.map(upg => upg.Country))].sort();
+    if (!countrySelect) {
+        console.error('Country select element not found');
+        return;
+    }
+    
+    const countries = [...new Set(existingUPGData
+        .filter(upg => upg.country && upg.country.trim()) // Filter out empty countries
+        .map(upg => upg.country.trim()))] // Use lowercase 'country' field
+        .sort();
+    
+    console.log('Available countries:', countries);
     
     countrySelect.innerHTML = '<option value="">Select a Country</option>';
     countries.forEach(country => {
-        if (country) {
-            const option = document.createElement('option');
-            option.value = country;
-            option.textContent = country;
-            countrySelect.appendChild(option);
-        }
+        const option = document.createElement('option');
+        option.value = country;
+        option.textContent = country;
+        countrySelect.appendChild(option);
     });
 }
 
 // Update UPG dropdown when country is selected
 function updateUPGDropdown(country) {
     const upgSelect = document.getElementById('upg-select');
-    const upgsInCountry = existingUPGData.filter(upg => upg.Country === country);
+    if (!upgSelect) {
+        console.error('UPG select element not found');
+        return;
+    }
+    
+    const upgsInCountry = existingUPGData.filter(upg => 
+        upg.country === country && upg.name && upg.name.trim()
+    );
+    console.log('UPGs in', country + ':', upgsInCountry);
     
     upgSelect.innerHTML = '<option value="">Select a UPG</option>';
     upgsInCountry.forEach(upg => {
         const option = document.createElement('option');
         option.value = JSON.stringify({
-            name: upg.PeopleName,
-            latitude: upg.Latitude,
-            longitude: upg.Longitude
+            name: upg.name,
+            latitude: upg.latitude || '',
+            longitude: upg.longitude || '',
+            country: upg.country,
+            religion: upg.religion || '',
+            language: upg.language || ''
         });
-        option.textContent = upg.PeopleName;
+        option.textContent = upg.name;
         upgSelect.appendChild(option);
     });
 }
