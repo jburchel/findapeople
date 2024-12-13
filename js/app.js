@@ -17,7 +17,7 @@ async function loadUUPGData() {
 // Load the existing UPG data
 async function loadExistingUPGData() {
     try {
-        const response = await fetch('data/CG-Existing-UPG-Q1-2024.csv');
+        const response = await fetch('data/existing_upgs_updated.csv');
         const csvText = await response.text();
         existingUPGData = Papa.parse(csvText, { header: true }).data;
         console.log('Loaded existing UPG data:', existingUPGData.length, 'entries');
@@ -60,7 +60,7 @@ function updateUPGDropdown(country) {
     }
     
     const upgsInCountry = existingUPGData.filter(upg => 
-        upg.country === country && upg.name && upg.name.trim()
+        upg.country === country && upg.name && upg.latitude && upg.longitude
     );
     console.log('UPGs in', country + ':', upgsInCountry);
     
@@ -69,8 +69,8 @@ function updateUPGDropdown(country) {
         const option = document.createElement('option');
         option.value = JSON.stringify({
             name: upg.name,
-            latitude: upg.latitude || '',
-            longitude: upg.longitude || '',
+            latitude: upg.latitude,
+            longitude: upg.longitude,
             country: upg.country,
             religion: upg.religion || '',
             language: upg.language || ''
@@ -122,6 +122,11 @@ async function searchFPGs(lat, lng, radius) {
     }
 }
 
+// Function to convert distance to kilometers
+function convertToKilometers(value, unit) {
+    return unit === 'miles' ? value * 1.60934 : value;
+}
+
 // Function to search UUPG data
 function searchUUPGs(lat, lng, radius) {
     console.log('Searching UUPGs with params:', { lat, lng, radius });
@@ -131,7 +136,7 @@ function searchUUPGs(lat, lng, radius) {
         return [];
     }
     
-    return uupgData.filter(upg => {
+    const results = uupgData.filter(upg => {
         if (!upg.latitude || !upg.longitude) {
             return false;
         }
@@ -143,7 +148,11 @@ function searchUUPGs(lat, lng, radius) {
             parseFloat(upg.longitude)
         );
         
-        return distance <= radius;
+        const withinRadius = distance <= radius;
+        if (withinRadius) {
+            console.log('Found UUPG within radius:', upg.name, distance);
+        }
+        return withinRadius;
     }).map(upg => ({
         name: upg.name || 'Unknown',
         country: upg.country || 'Unknown',
@@ -160,6 +169,9 @@ function searchUUPGs(lat, lng, radius) {
         ),
         isUUPG: true
     }));
+    
+    console.log(`Found ${results.length} UUPGs within ${radius}km`);
+    return results;
 }
 
 // Function to search for nearby people groups
@@ -167,7 +179,7 @@ async function searchNearbyGroups(selectedUPG, radius, searchType) {
     console.log('Searching near UPG:', selectedUPG, 'radius:', radius, 'type:', searchType);
     
     if (!selectedUPG.latitude || !selectedUPG.longitude) {
-        console.error('Selected UPG does not have valid coordinates');
+        console.error('Selected UPG does not have valid coordinates:', selectedUPG);
         return [];
     }
     
@@ -179,7 +191,10 @@ async function searchNearbyGroups(selectedUPG, radius, searchType) {
             parseFloat(selectedUPG.longitude),
             radius
         );
-        results.push(...fpgResults);
+        if (fpgResults && fpgResults.length) {
+            console.log(`Found ${fpgResults.length} FPGs`);
+            results.push(...fpgResults);
+        }
     }
     
     if (searchType === 'uupg' || searchType === 'both') {
@@ -188,11 +203,15 @@ async function searchNearbyGroups(selectedUPG, radius, searchType) {
             parseFloat(selectedUPG.longitude),
             radius
         );
-        results.push(...uupgResults);
+        if (uupgResults && uupgResults.length) {
+            console.log(`Found ${uupgResults.length} UUPGs`);
+            results.push(...uupgResults);
+        }
     }
     
     // Sort results by distance
     results.sort((a, b) => a.distance - b.distance);
+    console.log(`Total results: ${results.length}`);
     return results;
 }
 
@@ -233,31 +252,43 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUUPGData();
     
     // Country selection event
-    document.getElementById('country-select').addEventListener('change', (e) => {
-        const selectedCountry = e.target.value;
-        if (selectedCountry) {
-            updateUPGDropdown(selectedCountry);
-        }
-    });
+    const countrySelect = document.getElementById('country-select');
+    if (countrySelect) {
+        countrySelect.addEventListener('change', (e) => {
+            const selectedCountry = e.target.value;
+            if (selectedCountry) {
+                updateUPGDropdown(selectedCountry);
+            }
+        });
+    }
     
     // Form submission
-    document.getElementById('search-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const upgSelect = document.getElementById('upg-select');
-        const radiusInput = document.getElementById('radius');
-        const searchTypeSelect = document.getElementById('search-type');
-        
-        if (!upgSelect.value) {
-            alert('Please select a UPG');
-            return;
-        }
-        
-        const selectedUPG = JSON.parse(upgSelect.value);
-        const radius = parseInt(radiusInput.value);
-        const searchType = searchTypeSelect.value;
-        
-        const results = await searchNearbyGroups(selectedUPG, radius, searchType);
-        displayResults(results);
-    });
+    const searchForm = document.getElementById('search-form');
+    if (searchForm) {
+        searchForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const upgSelect = document.getElementById('upg-select');
+            const radiusInput = document.getElementById('radius');
+            const distanceUnit = document.querySelector('input[name="distanceUnit"]:checked');
+            const searchType = document.querySelector('input[name="searchType"]:checked');
+            
+            if (!upgSelect.value) {
+                alert('Please select a UPG');
+                return;
+            }
+            
+            const selectedUPG = JSON.parse(upgSelect.value);
+            const radiusKm = convertToKilometers(parseFloat(radiusInput.value), distanceUnit.value);
+            
+            console.log('Search parameters:', {
+                upg: selectedUPG,
+                radius: radiusKm,
+                searchType: searchType.value
+            });
+            
+            const results = await searchNearbyGroups(selectedUPG, radiusKm, searchType.value);
+            displayResults(results);
+        });
+    }
 });
