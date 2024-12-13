@@ -93,6 +93,11 @@ function displayResults(results, saveAsCurrentResults = true) {
         currentSearchResults = results;
     }
 
+    if (results.length === 0) {
+        resultsDiv.innerHTML += '<p>No results found</p>';
+        return;
+    }
+
     results.forEach(result => {
         const card = document.createElement('div');
         card.className = 'result-card';
@@ -121,7 +126,7 @@ function displayResults(results, saveAsCurrentResults = true) {
             <p><strong>Country:</strong> ${result.Ctry}</p>
             <p><strong>Population:</strong> ${result.Population?.toLocaleString() || 'Unknown'}</p>
             <p><strong>Religion:</strong> ${result.PrimaryReligion || 'Unknown'}</p>
-            <p><strong>Distance:</strong> ${result.displayDistance}${result.displayUnit === 'miles' ? 'mi' : 'km'}</p>
+            <p><strong>Distance:</strong> ${result.displayDistance || Math.round(result.distance)}${result.displayUnit === 'miles' ? 'mi' : 'km'}</p>
             <p><strong>% Evangelical:</strong> ${result.PercentEvangelical || '0'}%</p>
             <p><strong>% Adherent:</strong> ${result.PercentAdherents || '0'}%</p>
         `;
@@ -129,15 +134,12 @@ function displayResults(results, saveAsCurrentResults = true) {
         resultsContainer.appendChild(card);
     });
 
-    if (results.length === 0) {
-        resultsDiv.innerHTML += '<p>No results found</p>';
-    } else {
-        const addButton = document.createElement('button');
-        addButton.textContent = 'Add Selected to Top 100';
-        addButton.className = 'add-to-top100-btn';
-        addButton.onclick = addSelectedToTop100;
-        resultsDiv.appendChild(addButton);
-    }
+    // Add the "Add Selected to Top 100" button
+    const addButton = document.createElement('button');
+    addButton.textContent = 'Add Selected to Top 100';
+    addButton.className = 'add-to-top100-btn';
+    addButton.onclick = addSelectedToTop100;
+    resultsDiv.appendChild(addButton);
 }
 
 // Make displayResults globally accessible
