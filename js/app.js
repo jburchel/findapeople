@@ -88,14 +88,14 @@ async function searchFPGs(lat, lng, radius) {
             return [];
         }
 
-        const baseUrl = 'https://api.joshuaproject.net/v1/people_groups.json';
+        const baseUrl = 'https://api.joshuaproject.net/v2/people_groups';
         const params = new URLSearchParams({
             api_key: window.env.JOSHUA_PROJECT_API_KEY,
             latitude: lat,
             longitude: lng,
             radius: radius,
             frontier_people_group: '1',
-            select: 'PeopleID,PeopleName,Latitude,Longitude,Population,PrimaryReligion,PrimaryLanguageName,CountryName'
+            select: 'PeopleID3,PeopNameInCountry,Latitude,Longitude,Population,PrimaryReligion,PrimaryLanguageName,Ctry,JPScale,PercentEvangelical'
         });
 
         console.log('Fetching FPGs with params:', {
@@ -116,13 +116,16 @@ async function searchFPGs(lat, lng, radius) {
         console.log('FPG API Response:', data);
         
         return data.map(fpg => ({
-            name: fpg.PeopleName,
-            country: fpg.CountryName,
+            id: fpg.PeopleID3,
+            name: fpg.PeopNameInCountry,
+            country: fpg.Ctry,
             latitude: fpg.Latitude,
             longitude: fpg.Longitude,
             population: fpg.Population,
             religion: fpg.PrimaryReligion,
             language: fpg.PrimaryLanguageName,
+            evangelical: fpg.PercentEvangelical,
+            jpScale: fpg.JPScale,
             distance: calculateDistance(lat, lng, fpg.Latitude, fpg.Longitude),
             isFPG: true
         }));
@@ -241,14 +244,36 @@ function displayResults(results) {
     results.forEach(result => {
         const card = document.createElement('div');
         card.className = `card ${result.isUUPG ? 'uupg' : 'fpg'}`;
+        
+        // Format population with commas
+        const formattedPopulation = result.population?.toLocaleString() || 'Unknown';
+        
+        // Format evangelical percentage
+        const evangelicalPercent = result.evangelical 
+            ? `${parseFloat(result.evangelical).toFixed(1)}%`
+            : 'Unknown';
+            
+        // Format JPScale description
+        const jpScaleDescription = result.jpScale 
+            ? `JP Scale: ${result.jpScale}` 
+            : '';
+            
         card.innerHTML = `
             <h3>${result.name}</h3>
-            <p><strong>Type:</strong> ${result.isUUPG ? 'UUPG' : 'FPG'}</p>
-            <p><strong>Country:</strong> ${result.country}</p>
-            <p><strong>Population:</strong> ${result.population}</p>
-            <p><strong>Religion:</strong> ${result.religion}</p>
-            <p><strong>Language:</strong> ${result.language}</p>
-            <p><strong>Distance:</strong> ${Math.round(result.distance)} km</p>
+            <div class="card-type ${result.isUUPG ? 'uupg-tag' : 'fpg-tag'}">
+                ${result.isUUPG ? 'UUPG' : 'FPG'}
+            </div>
+            <div class="card-content">
+                <p><strong>Country:</strong> ${result.country}</p>
+                <p><strong>Population:</strong> ${formattedPopulation}</p>
+                <p><strong>Religion:</strong> ${result.religion || 'Unknown'}</p>
+                <p><strong>Language:</strong> ${result.language || 'Unknown'}</p>
+                <p><strong>Distance:</strong> ${Math.round(result.distance)} km</p>
+                ${!result.isUUPG ? `
+                    <p><strong>Evangelical Presence:</strong> ${evangelicalPercent}</p>
+                    <p><strong>${jpScaleDescription}</strong></p>
+                ` : ''}
+            </div>
         `;
         resultsGrid.appendChild(card);
     });
