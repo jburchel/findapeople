@@ -143,6 +143,15 @@ function displayResults(results, saveAsCurrentResults = true) {
 // Make displayResults globally accessible
 window.displayResults = displayResults;
 
+// Add these conversion functions at the top with your other utility functions
+function convertToKilometers(distance, unit) {
+    return unit === 'miles' ? distance * 1.60934 : distance;
+}
+
+function convertFromKilometers(distance, unit) {
+    return unit === 'miles' ? distance / 1.60934 : distance;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Constants
     const JP_API_KEY = '080e14ad747e';
@@ -289,15 +298,17 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const formattedLat = parseFloat(lat).toFixed(4);
             const formattedLng = parseFloat(lng).toFixed(4);
+            const selectedUnit = document.querySelector('input[name="distanceUnit"]:checked').value;
+            const radiusKm = convertToKilometers(radius, selectedUnit);
             
-            console.log(`Searching from coordinates: ${formattedLat}, ${formattedLng} with radius ${radius}km`);
+            console.log(`Searching from coordinates: ${formattedLat}, ${formattedLng} with radius ${radiusKm}km`);
 
             const url = `${JP_API_BASE_URL}/people_groups`;
             const params = {
                 api_key: JP_API_KEY,
                 latitude: formattedLat,
                 longitude: formattedLng,
-                radius: radius,
+                radius: radiusKm,  // Use converted radius
                 fields: 'PeopleID3,PeopNameInCountry,PeopNameAcrossCountries,Ctry,Population,PrimaryReligion,Latitude,Longitude,PercentEvangelical,PercentAdherents',
                 jpscale: '1',
                 least_reached: 'Y',
@@ -339,17 +350,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log(`${pg.PeopNameInCountry} (${pg.Ctry}):`, {
                     coordinates: `${pg.Latitude},${pg.Longitude}`,
                     distance: `${distance.toFixed(2)}km`,
-                    withinRadius: distance <= radius
+                    withinRadius: distance <= radiusKm
                 });
 
-                if (distance <= radius) {
+                if (distance <= radiusKm) {
                     pg.distance = distance;
                     return true;
                 }
                 return false;
             });
 
-            console.log(`Found ${filteredResults.length} FPGs within ${radius}km radius`);
+            console.log(`Found ${filteredResults.length} FPGs within ${radiusKm}km radius`);
 
             // Sort by distance
             const sortedResults = filteredResults
@@ -367,7 +378,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }));
 
             console.log('Final filtered and sorted results:', sortedResults);
-            return sortedResults;
+
+            // When processing results, convert distances to selected unit for display
+            return sortedResults.map(result => {
+                result.displayDistance = Math.round(convertFromKilometers(result.distance, selectedUnit));
+                result.displayUnit = selectedUnit;
+                return result;
+            });
 
         } catch (error) {
             console.error('Error fetching FPG data:', error);
@@ -852,14 +869,6 @@ function sortResults(sortBy) {
     // Clear and re-append sorted results
     resultsContainer.innerHTML = '';
     results.forEach(result => resultsContainer.appendChild(result));
-}
-
-function convertToKilometers(distance, unit) {
-    return unit === 'miles' ? distance * 1.60934 : distance;
-}
-
-function convertFromKilometers(distance, unit) {
-    return unit === 'miles' ? distance / 1.60934 : distance;
 }
 
 // Modify your search function to use the selected unit
