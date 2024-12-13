@@ -1,0 +1,15 @@
+.distance-unit {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+.distance-unit input[type="radio"] {
+    margin: 0;
+}
+
+.distance-unit label {
+    margin: 0;
+    cursor: pointer;
+} 

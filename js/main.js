@@ -93,7 +93,7 @@ function displayResults(results, saveAsCurrentResults = true) {
         currentSearchResults = results;
     }
 
-    if (results.length === 0) {
+    if (!results || results.length === 0) {
         resultsDiv.innerHTML += '<p>No results found</p>';
         return;
     }
@@ -101,15 +101,29 @@ function displayResults(results, saveAsCurrentResults = true) {
     results.forEach(result => {
         const card = document.createElement('div');
         card.className = 'result-card';
-        card.dataset.distance = result.distance;
-        card.dataset.type = result.type || '';
-        card.dataset.country = result.Ctry || '';
-        card.dataset.population = result.Population || '0';
-        card.dataset.religion = result.PrimaryReligion || '';
+        
+        // Get the current distance unit
+        const distanceUnitElement = document.querySelector('input[name="distanceUnit"]:checked');
+        const selectedUnit = distanceUnitElement ? distanceUnitElement.value : 'km';
+        
+        const displayDistance = result.displayDistance || Math.round(result.distance);
+        const displayUnit = result.displayUnit || selectedUnit;
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.className = 'upg-checkbox';
+        card.innerHTML = `
+            <input type="checkbox" class="upg-checkbox">
+            <h4>${result.PeopNameInCountry || result.name}</h4>
+            <p><strong>ID:</strong> ${result.PeopleID3 || 'N/A'}</p>
+            <p><strong>Type:</strong> ${result.type || 'Unknown'}</p>
+            <p><strong>Country:</strong> ${result.Ctry || result.country || 'Unknown'}</p>
+            <p><strong>Population:</strong> ${result.Population?.toLocaleString() || 'Unknown'}</p>
+            <p><strong>Religion:</strong> ${result.PrimaryReligion || result.religion || 'Unknown'}</p>
+            <p><strong>Distance:</strong> ${displayDistance}${displayUnit === 'miles' ? 'mi' : 'km'}</p>
+            <p><strong>% Evangelical:</strong> ${result.PercentEvangelical || '0'}%</p>
+            <p><strong>% Adherent:</strong> ${result.PercentAdherents || '0'}%</p>
+        `;
+
+        // Add checkbox event listener
+        const checkbox = card.querySelector('.upg-checkbox');
         checkbox.addEventListener('change', () => {
             if (checkbox.checked) {
                 selectedUPGs.add(result);
@@ -117,19 +131,6 @@ function displayResults(results, saveAsCurrentResults = true) {
                 selectedUPGs.delete(result);
             }
         });
-
-        card.innerHTML = `
-            ${checkbox.outerHTML}
-            <h4>${result.PeopNameInCountry}</h4>
-            <p><strong>ID:</strong> ${result.PeopleID3}</p>
-            <p><strong>Type:</strong> ${result.type || 'Unknown'}</p>
-            <p><strong>Country:</strong> ${result.Ctry}</p>
-            <p><strong>Population:</strong> ${result.Population?.toLocaleString() || 'Unknown'}</p>
-            <p><strong>Religion:</strong> ${result.PrimaryReligion || 'Unknown'}</p>
-            <p><strong>Distance:</strong> ${result.displayDistance || Math.round(result.distance)}${result.displayUnit === 'miles' ? 'mi' : 'km'}</p>
-            <p><strong>% Evangelical:</strong> ${result.PercentEvangelical || '0'}%</p>
-            <p><strong>% Adherent:</strong> ${result.PercentAdherents || '0'}%</p>
-        `;
 
         resultsContainer.appendChild(card);
     });
