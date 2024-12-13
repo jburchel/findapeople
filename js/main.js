@@ -77,13 +77,9 @@ function sortAndDisplayResults(sortBy) {
 window.sortAndDisplayResults = sortAndDisplayResults;
 
 // Define displayResults before it's used
-function displayResults(results, saveAsCurrentResults = true) {
+function displayResults(results) {
     const resultsDiv = document.getElementById('searchResults');
     resultsDiv.innerHTML = '';
-
-    if (saveAsCurrentResults) {
-        currentSearchResults = results;
-    }
 
     if (!results || results.length === 0) {
         resultsDiv.innerHTML = '<p>No results found</p>';
@@ -107,8 +103,13 @@ function displayResults(results, saveAsCurrentResults = true) {
         const displayDistance = result.displayDistance || Math.round(result.distance);
         const displayUnit = result.displayUnit || selectedUnit;
 
-        resultCard.innerHTML = `
-            <input type="checkbox" class="upg-checkbox">
+        // Create checkbox
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'upg-checkbox';
+        resultCard.appendChild(checkbox);
+
+        resultCard.innerHTML += `
             <h4>${result.PeopNameInCountry || result.name}</h4>
             <p><strong>ID:</strong> ${result.PeopleID3 || 'N/A'}</p>
             <p><strong>Type:</strong> ${result.type || 'Unknown'}</p>
@@ -121,7 +122,6 @@ function displayResults(results, saveAsCurrentResults = true) {
         `;
 
         // Add checkbox event listener
-        const checkbox = resultCard.querySelector('.upg-checkbox');
         checkbox.addEventListener('change', () => {
             if (checkbox.checked) {
                 selectedUPGs.add(result);
@@ -139,6 +139,9 @@ function displayResults(results, saveAsCurrentResults = true) {
     addButton.className = 'add-to-top100-btn';
     addButton.onclick = addSelectedToTop100;
     resultsDiv.appendChild(addButton);
+
+    // Make results container visible
+    resultsContainer.style.display = 'grid';
 }
 
 // Make displayResults globally accessible

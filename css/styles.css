@@ -43,10 +43,41 @@ h1 {
 }
 
 .form-group {
-    margin-bottom: 25px;
-    background-color: var(--background-gray);
-    padding: 20px;
-    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.proximity-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.proximity-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.distance-unit {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-left: 10px;
+}
+
+input[type="number"] {
+    width: 100px; /* Adjust width as needed */
+}
+
+.distance-unit input[type="radio"] {
+    margin: 0;
+}
+
+.distance-unit label {
+    margin: 0;
+    display: inline;
+    cursor: pointer;
 }
 
 label {
