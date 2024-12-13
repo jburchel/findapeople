@@ -88,15 +88,30 @@ button:hover {
     background-color: #2980b9;
 }
 
-/* Results Grid */
+/* Results Container */
+.results-container {
+    margin-top: 2rem;
+    padding: 1rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.sort-dropdown-container {
+    margin-bottom: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid #eee;
+}
+
 .results-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 1rem;
-    padding: 1rem;
+    padding: 1rem 0;
 }
 
 .upg-card {
+    position: relative;
     background: #fff;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
@@ -133,9 +148,8 @@ button:hover {
     border-left: 4px solid #3498db;
 }
 
-/* Add a type indicator at the top right */
-.upg-card.uupg::before,
-.upg-card.fpg::before {
+/* Type indicator */
+.upg-card::before {
     content: attr(data-type);
     position: absolute;
     top: 0.5rem;
@@ -154,4 +168,12 @@ button:hover {
 .upg-card.fpg::before {
     background: #e3f2fd;
     color: #3498db;
+}
+
+/* No results message */
+#results > p {
+    text-align: center;
+    color: #666;
+    padding: 2rem;
+    font-style: italic;
 }

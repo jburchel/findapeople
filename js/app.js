@@ -28,7 +28,7 @@ async function fetchFPGData(lat, lng, radius) {
             latitude: lat,
             longitude: lng,
             radius: radius,
-            frontier_people_group: 1, // Changed to 1 for true
+            frontier_people_group: 1,
             select: 'PeopleID,PeopleName,Latitude,Longitude,Population,PrimaryReligion,PrimaryLanguageName,CountryName'
         });
 
@@ -61,15 +61,51 @@ async function fetchFPGData(lat, lng, radius) {
     }
 }
 
+// Function to search UUPG data
+function searchUUPGs(lat, lng, radius) {
+    return uupgData.filter(upg => {
+        if (!upg.Latitude || !upg.Longitude) return false;
+        
+        const distance = calculateDistance(
+            lat,
+            lng,
+            parseFloat(upg.Latitude),
+            parseFloat(upg.Longitude)
+        );
+        
+        return distance <= radius;
+    }).map(upg => ({
+        name: upg.PeopleName,
+        country: upg.Country,
+        latitude: upg.Latitude,
+        longitude: upg.Longitude,
+        population: upg.Population,
+        religion: upg.Religion,
+        language: upg.Language,
+        distance: calculateDistance(
+            lat,
+            lng,
+            parseFloat(upg.Latitude),
+            parseFloat(upg.Longitude)
+        ),
+        isUUPG: true
+    }));
+}
+
 // Function to display search results
 function displayResults(results) {
     const resultsContainer = document.getElementById('results');
-    if (!resultsContainer) return;
+    if (!resultsContainer) {
+        console.error('Results container not found');
+        return;
+    }
 
     if (!results || results.length === 0) {
         resultsContainer.innerHTML = '<p>No people groups found within the specified radius.</p>';
         return;
     }
+
+    console.log('Displaying results:', results);
 
     let html = '<div class="results-grid">';
     results.forEach(group => {
@@ -77,12 +113,12 @@ function displayResults(results) {
         const type = group.isUUPG ? 'UUPG' : 'FPG';
         html += `
             <div class="upg-card ${type.toLowerCase()}" data-type="${type}">
-                <h3>${group.name || group.PeopleName}</h3>
+                <h3>${group.name}</h3>
                 <p><strong>Type:</strong> ${type}</p>
-                <p><strong>Country:</strong> ${group.country || group.Country}</p>
-                <p><strong>Population:</strong> ${group.population || group.Population || 'Unknown'}</p>
-                <p><strong>Religion:</strong> ${group.religion || group.Religion || 'Unknown'}</p>
-                <p><strong>Language:</strong> ${group.language || group.Language || 'Unknown'}</p>
+                <p><strong>Country:</strong> ${group.country}</p>
+                <p><strong>Population:</strong> ${group.population || 'Unknown'}</p>
+                <p><strong>Religion:</strong> ${group.religion || 'Unknown'}</p>
+                <p><strong>Language:</strong> ${group.language || 'Unknown'}</p>
                 <p><strong>Distance:</strong> ${distance} km</p>
             </div>
         `;
@@ -123,37 +159,20 @@ async function performSearch() {
     // Search FPGs from Joshua Project API
     if (searchType === 'all' || searchType === 'fpg') {
         const fpgResults = await fetchFPGData(selectedLat, selectedLng, radius);
+        console.log('FPG Results:', fpgResults);
         results = results.concat(fpgResults);
     }
 
-    // Search UUPGs from updated_uupg.csv
+    // Search UUPGs from local data
     if (searchType === 'all' || searchType === 'uupg') {
-        const uupgResults = uupgData.filter(upg => {
-            if (!upg.Latitude || !upg.Longitude) return false;
-            
-            const distance = calculateDistance(
-                selectedLat,
-                selectedLng,
-                parseFloat(upg.Latitude),
-                parseFloat(upg.Longitude)
-            );
-            
-            return distance <= radius;
-        }).map(upg => ({
-            ...upg,
-            distance: calculateDistance(
-                selectedLat,
-                selectedLng,
-                parseFloat(upg.Latitude),
-                parseFloat(upg.Longitude)
-            ),
-            isUUPG: true
-        }));
+        const uupgResults = searchUUPGs(selectedLat, selectedLng, radius);
+        console.log('UUPG Results:', uupgResults);
         results = results.concat(uupgResults);
     }
 
     // Sort results by distance
     results.sort((a, b) => a.distance - b.distance);
+    console.log('Combined Results:', results);
     
     // Display the results
     displayResults(results);
