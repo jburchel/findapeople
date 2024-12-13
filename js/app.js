@@ -1,5 +1,5 @@
-// Main application logic
-let peopleGroupsData = [];
+// Global variables to store data
+let existingUPGData = [];
 let uupgData = [];
 
 // Function to load UUPG data
@@ -19,8 +19,55 @@ async function loadUUPGData() {
     }
 }
 
+// Load the existing UPG data
+async function loadExistingUPGData() {
+    try {
+        const response = await fetch('data/existing_upgs_updated.csv');
+        const csvText = await response.text();
+        existingUPGData = Papa.parse(csvText, { header: true }).data;
+        console.log('Loaded existing UPG data:', existingUPGData);
+        populateCountryDropdown();
+    } catch (error) {
+        console.error('Error loading existing UPG data:', error);
+    }
+}
+
+// Populate country dropdown from existing UPG data
+function populateCountryDropdown() {
+    const countrySelect = document.getElementById('country-select');
+    const countries = [...new Set(existingUPGData.map(upg => upg.Country))].sort();
+    
+    countrySelect.innerHTML = '<option value="">Select a Country</option>';
+    countries.forEach(country => {
+        if (country) {
+            const option = document.createElement('option');
+            option.value = country;
+            option.textContent = country;
+            countrySelect.appendChild(option);
+        }
+    });
+}
+
+// Update UPG dropdown when country is selected
+function updateUPGDropdown(country) {
+    const upgSelect = document.getElementById('upg-select');
+    const upgsInCountry = existingUPGData.filter(upg => upg.Country === country);
+    
+    upgSelect.innerHTML = '<option value="">Select a UPG</option>';
+    upgsInCountry.forEach(upg => {
+        const option = document.createElement('option');
+        option.value = JSON.stringify({
+            name: upg.PeopleName,
+            latitude: upg.Latitude,
+            longitude: upg.Longitude
+        });
+        option.textContent = upg.PeopleName;
+        upgSelect.appendChild(option);
+    });
+}
+
 // Function to fetch FPG data from Joshua Project API
-async function fetchFPGData(lat, lng, radius) {
+async function searchFPGs(lat, lng, radius) {
     try {
         const baseUrl = 'https://api.joshuaproject.net/v1/people_groups.json';
         const params = new URLSearchParams({
@@ -104,6 +151,26 @@ function searchUUPGs(lat, lng, radius) {
     return results;
 }
 
+// Function to search for nearby people groups
+async function searchNearbyGroups(selectedUPG, radius, searchType) {
+    console.log('Searching near UPG:', selectedUPG, 'radius:', radius, 'type:', searchType);
+    const results = [];
+    
+    if (searchType === 'fpg' || searchType === 'both') {
+        const fpgResults = await searchFPGs(selectedUPG.latitude, selectedUPG.longitude, radius);
+        results.push(...fpgResults);
+    }
+    
+    if (searchType === 'uupg' || searchType === 'both') {
+        const uupgResults = searchUUPGs(selectedUPG.latitude, selectedUPG.longitude, radius);
+        results.push(...uupgResults);
+    }
+    
+    // Sort results by distance
+    results.sort((a, b) => a.distance - b.distance);
+    return results;
+}
+
 // Function to display search results
 function displayResults(results) {
     const resultsContainer = document.getElementById('results-container');
@@ -132,71 +199,37 @@ function displayResults(results) {
     });
 }
 
-// Function to perform the search
-async function performSearch() {
-    const countrySelect = document.getElementById('country');
-    const upgSelect = document.getElementById('upg');
-    const proximityInput = document.getElementById('proximity');
-    const distanceUnit = document.querySelector('input[name="distanceUnit"]:checked');
-    const searchType = document.querySelector('input[name="searchType"]:checked').value;
-
-    if (!upgSelect.value) {
-        alert('Please select a UPG first');
-        return;
-    }
-
-    const selectedOption = upgSelect.options[upgSelect.selectedIndex];
-    const selectedLat = parseFloat(selectedOption.dataset.latitude);
-    const selectedLng = parseFloat(selectedOption.dataset.longitude);
-    const radius = convertToKilometers(parseFloat(proximityInput.value), distanceUnit.value);
-
-    console.log('Search parameters:', {
-        country: countrySelect.value,
-        upg: upgSelect.value,
-        latitude: selectedLat,
-        longitude: selectedLng,
-        radius: radius,
-        searchType: searchType
+// Event Listeners
+document.addEventListener('DOMContentLoaded', () => {
+    loadExistingUPGData();
+    loadUUPGData();
+    
+    // Country selection event
+    document.getElementById('country-select').addEventListener('change', (e) => {
+        const selectedCountry = e.target.value;
+        if (selectedCountry) {
+            updateUPGDropdown(selectedCountry);
+        }
     });
-
-    let results = [];
     
-    // Search FPGs from Joshua Project API
-    if (searchType === 'all' || searchType === 'fpg') {
-        const fpgResults = await fetchFPGData(selectedLat, selectedLng, radius);
-        console.log('FPG Results:', fpgResults);
-        results = results.concat(fpgResults);
-    }
-
-    // Search UUPGs from local data
-    if (searchType === 'all' || searchType === 'uupg') {
-        const uupgResults = searchUUPGs(selectedLat, selectedLng, radius);
-        console.log('UUPG Results:', uupgResults);
-        results = results.concat(uupgResults);
-    }
-
-    // Sort results by distance
-    results.sort((a, b) => a.distance - b.distance);
-    console.log('Combined Results:', results);
-    
-    // Display the results
-    displayResults(results);
-}
-
-// Initialize the application
-async function initApp() {
-    const countrySelect = document.getElementById('country');
-    const upgSelect = document.getElementById('upg');
-    const searchButton = document.getElementById('search');
-    
-    // Load UUPG data
-    await loadUUPGData();
-    
-    // Event listeners for search functionality
-    if (searchButton) {
-        searchButton.addEventListener('click', performSearch);
-    }
-}
-
-// Start the application when DOM is loaded
-document.addEventListener('DOMContentLoaded', initApp);
+    // Form submission
+    document.getElementById('search-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const upgSelect = document.getElementById('upg-select');
+        const radiusInput = document.getElementById('radius');
+        const searchTypeSelect = document.getElementById('search-type');
+        
+        if (!upgSelect.value) {
+            alert('Please select a UPG');
+            return;
+        }
+        
+        const selectedUPG = JSON.parse(upgSelect.value);
+        const radius = parseInt(radiusInput.value);
+        const searchType = searchTypeSelect.value;
+        
+        const results = await searchNearbyGroups(selectedUPG, radius, searchType);
+        displayResults(results);
+    });
+});
