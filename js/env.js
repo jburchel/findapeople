@@ -2,6 +2,10 @@
 async function loadEnvVariables() {
     try {
         const response = await fetch('/.env');
+        if (!response.ok) {
+            throw new Error('Failed to load .env file');
+        }
+        
         const text = await response.text();
         
         // Parse .env file
@@ -12,7 +16,7 @@ async function loadEnvVariables() {
                 const [key, ...valueParts] = line.split('=');
                 const value = valueParts.join('=');
                 if (key && value) {
-                    envVars[key.trim()] = value.trim();
+                    envVars[key.trim()] = value.trim().replace(/["']/g, ''); // Remove quotes if present
                 }
             }
         });
@@ -20,20 +24,16 @@ async function loadEnvVariables() {
         // Set environment variables globally
         window.env = envVars;
         
-        // Update config with environment variables
-        if (window.appConfig) {
-            window.appConfig.joshuaProjectApiKey = envVars.JOSHUA_PROJECT_API_KEY || '';
-            window.appConfig.firebaseConfig = {
-                apiKey: envVars.FIREBASE_API_KEY || '',
-                authDomain: envVars.FIREBASE_AUTH_DOMAIN || '',
-                projectId: envVars.FIREBASE_PROJECT_ID || '',
-                storageBucket: envVars.FIREBASE_STORAGE_BUCKET || ''
-            };
-        }
-        
         console.log('Environment variables loaded successfully');
+        
+        // Verify Joshua Project API key is present
+        if (!envVars.JOSHUA_PROJECT_API_KEY) {
+            console.error('Joshua Project API key not found in environment variables');
+        }
     } catch (error) {
         console.error('Error loading environment variables:', error);
+        // Set empty env object to prevent undefined errors
+        window.env = {};
     }
 }
 

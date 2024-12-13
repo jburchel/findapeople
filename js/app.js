@@ -83,22 +83,32 @@ function updateUPGDropdown(country) {
 // Function to fetch FPG data from Joshua Project API
 async function searchFPGs(lat, lng, radius) {
     try {
+        if (!window.env || !window.env.JOSHUA_PROJECT_API_KEY) {
+            console.error('Joshua Project API key not found');
+            return [];
+        }
+
         const baseUrl = 'https://api.joshuaproject.net/v1/people_groups.json';
         const params = new URLSearchParams({
-            api_key: window.appConfig.joshuaProjectApiKey,
+            api_key: window.env.JOSHUA_PROJECT_API_KEY,
             latitude: lat,
             longitude: lng,
             radius: radius,
-            frontier_people_group: 1,
+            frontier_people_group: '1',
             select: 'PeopleID,PeopleName,Latitude,Longitude,Population,PrimaryReligion,PrimaryLanguageName,CountryName'
         });
 
-        console.log('Fetching FPGs with params:', Object.fromEntries(params));
+        console.log('Fetching FPGs with params:', {
+            latitude: lat,
+            longitude: lng,
+            radius: radius
+        });
+        
         const response = await fetch(`${baseUrl}?${params}`);
         
         if (!response.ok) {
             const errorText = await response.text();
-            console.error('API Error:', errorText);
+            console.error('API Error:', response.status, errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
