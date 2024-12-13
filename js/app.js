@@ -125,58 +125,69 @@ async function searchFPGs(lat, lng, radius) {
 // Function to search UUPG data
 function searchUUPGs(lat, lng, radius) {
     console.log('Searching UUPGs with params:', { lat, lng, radius });
-    console.log('Total UUPGs to search:', uupgData.length);
     
-    const results = uupgData.filter(upg => {
-        if (!upg.Latitude || !upg.Longitude) {
+    if (!uupgData || !uupgData.length) {
+        console.error('No UUPG data available');
+        return [];
+    }
+    
+    return uupgData.filter(upg => {
+        if (!upg.latitude || !upg.longitude) {
             return false;
         }
         
         const distance = calculateDistance(
-            lat,
-            lng,
-            parseFloat(upg.Latitude),
-            parseFloat(upg.Longitude)
+            parseFloat(lat),
+            parseFloat(lng),
+            parseFloat(upg.latitude),
+            parseFloat(upg.longitude)
         );
         
-        const withinRadius = distance <= radius;
-        if (withinRadius) {
-            console.log('Found UUPG within radius:', upg.PeopleName, distance);
-        }
-        return withinRadius;
+        return distance <= radius;
     }).map(upg => ({
-        name: upg.PeopleName,
-        country: upg.Country,
-        population: upg.Population,
-        religion: upg.Religion,
-        language: upg.Language,
-        latitude: upg.Latitude,
-        longitude: upg.Longitude,
+        name: upg.name || 'Unknown',
+        country: upg.country || 'Unknown',
+        population: upg.population || 'Unknown',
+        religion: upg.religion || 'Unknown',
+        language: upg.language || 'Unknown',
+        latitude: upg.latitude,
+        longitude: upg.longitude,
         distance: calculateDistance(
-            lat,
-            lng,
-            parseFloat(upg.Latitude),
-            parseFloat(upg.Longitude)
+            parseFloat(lat),
+            parseFloat(lng),
+            parseFloat(upg.latitude),
+            parseFloat(upg.longitude)
         ),
         isUUPG: true
     }));
-
-    console.log('UUPG search results:', results);
-    return results;
 }
 
 // Function to search for nearby people groups
 async function searchNearbyGroups(selectedUPG, radius, searchType) {
     console.log('Searching near UPG:', selectedUPG, 'radius:', radius, 'type:', searchType);
+    
+    if (!selectedUPG.latitude || !selectedUPG.longitude) {
+        console.error('Selected UPG does not have valid coordinates');
+        return [];
+    }
+    
     const results = [];
     
     if (searchType === 'fpg' || searchType === 'both') {
-        const fpgResults = await searchFPGs(selectedUPG.latitude, selectedUPG.longitude, radius);
+        const fpgResults = await searchFPGs(
+            parseFloat(selectedUPG.latitude),
+            parseFloat(selectedUPG.longitude),
+            radius
+        );
         results.push(...fpgResults);
     }
     
     if (searchType === 'uupg' || searchType === 'both') {
-        const uupgResults = searchUUPGs(selectedUPG.latitude, selectedUPG.longitude, radius);
+        const uupgResults = searchUUPGs(
+            parseFloat(selectedUPG.latitude),
+            parseFloat(selectedUPG.longitude),
+            radius
+        );
         results.push(...uupgResults);
     }
     
@@ -191,26 +202,29 @@ function displayResults(results) {
     resultsContainer.innerHTML = ''; // Clear previous results
     
     if (!results || results.length === 0) {
-        resultsContainer.innerHTML = '<p>No people groups found in this area.</p>';
+        resultsContainer.innerHTML = '<p class="no-results">No people groups found in this area.</p>';
         return;
     }
 
-    console.log('Displaying results:', results);
-
+    const resultsGrid = document.createElement('div');
+    resultsGrid.className = 'results-grid';
+    
     results.forEach(result => {
         const card = document.createElement('div');
-        card.className = 'card';
+        card.className = `card ${result.isUUPG ? 'uupg' : 'fpg'}`;
         card.innerHTML = `
             <h3>${result.name}</h3>
             <p><strong>Type:</strong> ${result.isUUPG ? 'UUPG' : 'FPG'}</p>
-            <p><strong>Country:</strong> ${result.country || 'N/A'}</p>
-            <p><strong>Population:</strong> ${result.population || 'N/A'}</p>
-            <p><strong>Religion:</strong> ${result.religion || 'N/A'}</p>
-            <p><strong>Language:</strong> ${result.language || 'N/A'}</p>
+            <p><strong>Country:</strong> ${result.country}</p>
+            <p><strong>Population:</strong> ${result.population}</p>
+            <p><strong>Religion:</strong> ${result.religion}</p>
+            <p><strong>Language:</strong> ${result.language}</p>
             <p><strong>Distance:</strong> ${Math.round(result.distance)} km</p>
         `;
-        resultsContainer.appendChild(card);
+        resultsGrid.appendChild(card);
     });
+    
+    resultsContainer.appendChild(resultsGrid);
 }
 
 // Event Listeners
