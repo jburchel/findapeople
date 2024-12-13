@@ -1,17 +1,23 @@
 # Environment variables
 .env
 .env.local
-.env.*
+.env.*.local
 !.env.example
 
 # Dependencies
 node_modules/
+package-lock.json
+yarn.lock
 __pycache__/
 *.pyc
 
+# Build output
+dist/
+build/
+
 # IDE files
-.vscode/
 .idea/
+.vscode/
 *.swp
 *.swo
 

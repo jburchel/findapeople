@@ -92,29 +92,66 @@ button:hover {
 .results-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.5rem;
-    margin-top: 2rem;
+    gap: 1rem;
+    padding: 1rem;
 }
 
 .upg-card {
-    background-color: #fff;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1.5rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    transition: transform 0.2s ease-in-out;
+}
+
+.upg-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .upg-card h3 {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
-    font-size: 1.25rem;
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
 }
 
 .upg-card p {
-    margin-bottom: 0.5rem;
-    line-height: 1.4;
+    margin: 0.5rem 0;
+    color: #34495e;
 }
 
 .upg-card strong {
-    color: var(--primary-color);
+    color: #2c3e50;
+}
+
+/* Specific styles for different UPG types */
+.upg-card.uupg {
+    border-left: 4px solid #e74c3c;
+}
+
+.upg-card.fpg {
+    border-left: 4px solid #3498db;
+}
+
+/* Add a type indicator at the top right */
+.upg-card.uupg::before,
+.upg-card.fpg::before {
+    content: attr(data-type);
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.upg-card.uupg::before {
+    background: #fde2e2;
+    color: #e74c3c;
+}
+
+.upg-card.fpg::before {
+    background: #e3f2fd;
+    color: #3498db;
 }
