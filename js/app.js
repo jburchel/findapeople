@@ -84,9 +84,11 @@ function updateUPGDropdown(country) {
 async function searchFPGs(lat, lng, radius) {
     try {
         if (!window.env || !window.env.JOSHUA_PROJECT_API_KEY) {
-            console.error('Joshua Project API key not found');
+            console.error('Joshua Project API key not found. Current env:', window.env);
             return [];
         }
+
+        console.log('Using API key:', window.env.JOSHUA_PROJECT_API_KEY.substring(0, 4) + '...');
 
         const baseUrl = 'https://api.joshuaproject.net/v2/people_groups';
         const params = new URLSearchParams({
@@ -98,13 +100,10 @@ async function searchFPGs(lat, lng, radius) {
             select: 'PeopleID3,PeopNameInCountry,Latitude,Longitude,Population,PrimaryReligion,PrimaryLanguageName,Ctry,JPScale,PercentEvangelical'
         });
 
-        console.log('Fetching FPGs with params:', {
-            latitude: lat,
-            longitude: lng,
-            radius: radius
-        });
-        
-        const response = await fetch(`${baseUrl}?${params}`);
+        const apiUrl = `${baseUrl}?${params}`;
+        console.log('Making API request to:', apiUrl.replace(window.env.JOSHUA_PROJECT_API_KEY, 'API_KEY'));
+
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
             const errorText = await response.text();
